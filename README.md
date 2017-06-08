@@ -63,5 +63,7 @@ to train.
 ## Result
 
 Accuracy for relational questions: 70% <-> 63% of CNN + MLP written in the paper
+
 Accuracy for non-relational questions: 57%
+
 On test dataset after 3rd Epoch (Now I keep training...)
