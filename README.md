@@ -26,6 +26,8 @@ Questions are encoded into a vector of size of 11 : 6 for one-hot vector for cer
 
 ![img](./data/sample.png?)
 
+<img src="./data/sample.png" width="48">
+
 I.e., with the sample image shown, we can generate non-relational questions like:
 
 1) What is the shape of the red object? => Circle (even though it does not really look like "circle"...)
