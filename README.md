@@ -24,7 +24,7 @@ These questions are "relational" because the agent has to consider the relations
 
 Questions are encoded into a vector of size of 11 : 6 for one-hot vector for certain color among 6 colors, 2 for one-hot vector of relational/non-relational questions. 3 for one-hot vector of 3 subtypes.
 
-![Alt text](./data/sample.png? =256x256)
+![](./data/sample.png? =256x256)
 
 I.e., with the sample image shown, we can generate non-relational questions like:
 
