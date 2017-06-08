@@ -5,12 +5,10 @@ import random
 import cPickle as pickle
 
 train_size = 9800
-
 test_size = 200
 img_size = 75
 size = 5
 question_size = 11 ##6 for one-hot vector of color, 2 for question type, 3 for question subtype
-#answer_size = 29
 """Answer : [yes, no, rectangle, circle, r, g, b, o, k, y]"""
 answer_size = 2+2+6
 
@@ -44,8 +42,6 @@ def center_generate(objects):
             return center
 
 
-#img_count = 0
-#cv2.imwrite(os.path.join(dirs,'{}.png'.format(img_count)), img)
 
 def build_dataset():
     objects = []
@@ -77,33 +73,25 @@ def build_dataset():
         question[subtype+8] = 1
         norel_questions.append(question)
         """Answer : [yes, no, rectangle, circle, r, g, b, o, k, y]"""
-        #answer = np.zeros((answer_size))
-
         if subtype == 0:
             """query shape->rectangle/circle"""
             if objects[color][2] == 'r':
-                #answer[2] = 1
                 answer = 2
             else:
-                #answer[3] = 1
                 answer = 3
 
         elif subtype == 1:
             """query horizontal position->yes/no"""
             if objects[color][1][0] < img_size / 2:
-                #answer[0] = 1
                 answer = 0
             else:
-                #answer[1] = 1
                 answer = 1
 
         elif subtype == 2:
             """query vertical position->yes/no"""
             if objects[color][1][1] < img_size / 2:
-                #answer[0] = 1
                 answer = 0
             else:
-                #answer[1] = 1
                 answer = 1
         norel_answers.append(answer)
     
@@ -116,7 +104,6 @@ def build_dataset():
         subtype = random.randint(0,2)
         question[subtype+8] = 1
         rel_questions.append(question)
-        #answer = np.zeros((answer_size))
 
         if subtype == 0:
             """closest-to->rectangle/circle"""
@@ -125,10 +112,8 @@ def build_dataset():
             dist_list[dist_list.index(0)] = 999
             closest = dist_list.index(min(dist_list))
             if objects[closest][2] == 'r':
-                #answer[2] = 1
                 answer = 2
             else:
-                #answer[3] = 1
                 answer = 3
                 
         elif subtype == 1:
@@ -137,10 +122,8 @@ def build_dataset():
             dist_list = [((my_obj - obj[1]) ** 2).sum() for obj in objects]
             furthest = dist_list.index(max(dist_list))
             if objects[furthest][2] == 'r':
-                #answer[2] = 1
                 answer = 2
             else:
-                #answer[3] = 1
                 answer = 3
 
         elif subtype == 2:
@@ -150,7 +133,6 @@ def build_dataset():
             for obj in objects:
                 if obj[2] == my_obj:
                     count +=1 
-            #answer[count+4] = 1
             answer = count+4
 
         rel_answers.append(answer)
@@ -167,6 +149,10 @@ print('building test datasets...')
 test_datasets = [build_dataset() for _ in range(test_size)]
 print('building train datasets...')
 train_datasets = [build_dataset() for _ in range(train_size)]
+
+
+#img_count = 0
+#cv2.imwrite(os.path.join(dirs,'{}.png'.format(img_count)), cv2.resize(train_datasets[0][0]*255, (512,512)))
 
 
 print('saving datasets...')

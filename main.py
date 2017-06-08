@@ -29,7 +29,7 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                     help='how many batches to wait before logging training status')
-parser.add_argument('--resume', type=str, default='epoch_1.pth',
+parser.add_argument('--resume', type=str,
                     help='resume from model stored')
 
 
@@ -44,7 +44,6 @@ kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
 model = model.RN(args)
 model_dirs = './model'
-#optimizer = optim.Adam(model.parameters(), lr=args.lr)
 bs = args.batch_size
 input_img = torch.FloatTensor(bs, 3, 75, 75)
 input_qst = torch.FloatTensor(bs, 10)
@@ -86,8 +85,8 @@ def train(epoch, rel, norel):
 
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)] Relations accuracy: {:.0f}% | Non-relations accuracy: {:.0f}%'.format(epoch, batch_idx * bs * 2, len(rel[0]) * 2, \
-                                                                                                                 100. * batch_idx * bs/ len(rel[0]), accuracy_rel, accuracy_norel))
-
+                                                                                                                           100. * batch_idx * bs/ len(rel[0]), accuracy_rel, accuracy_norel))
+            
 
 def test(epoch, rel, norel):
     model.eval()
@@ -146,9 +145,7 @@ def load_data():
 
     return tuple(n_datasets)
 
-
 rel_train, rel_test, norel_train, norel_test = load_data()
-
 
 try:
     os.makedirs(model_dirs)
