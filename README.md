@@ -14,12 +14,12 @@ Implemented on Sort-of-CLEVR task.
 
 or
 
-  $ python sort_of_clevr_generator.py
+  	$ python sort_of_clevr_generator.py
 
 to generate sort-of-clevr dataset
 and
 
-  $ python main.py 
+ 	 $ python main.py 
 
 to train.
 
