@@ -29,8 +29,8 @@ Questions are encoded into a vector of size of 11 : 6 for one-hot vector for cer
 I.e., with the sample image shown, we can generate non-relational questions like:
 
 1) What is the shape of the red object? => Circle (even though it does not really look like "circle"...)
-2) is green object placed on the left side of the image? => yes
-3) is orange object placed on the upside of the image? => no
+2) Is green object placed on the left side of the image? => yes
+3) Is orange object placed on the upside of the image? => no
 
 And relational questions:
 
