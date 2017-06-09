@@ -69,4 +69,4 @@ to train.
 
 Relational networks shows far better results in relational questions, as the original paper argues.
 
-Still this model shows low accuracy overall - I guess it could be the problem of either the architecture of the model, or difference between my dataset and the author's dataset. Please wait for further improvement!
+Still this model shows low accuracy overall - I guess it could be the problem of either the architecture of the model, or difference between my dataset and the author's dataset. Please wait for further improvement! (and your pull requests are always welcome!)
