@@ -4,7 +4,7 @@ Implemented & tested on Sort-of-CLEVR task.
 
 ## Sort-of-CLEVR
 
-Sort-of-CLEVR is simplified version of [CLEVR](http://cs.stanford.edu/people/jcjohns/clevr/), of which is composed of 10000 images and 20 questions (10 relational questions and 10 non-relational questions) per each image. 6 colors (red, green, blue, orange, gray, yellow) are assigned to randomly chosen shape (square or circle), and placed in a image.
+Sort-of-CLEVR is simplified version of [CLEVR](http://cs.stanford.edu/people/jcjohns/clevr/).This is composed of 10000 images and 20 questions (10 relational questions and 10 non-relational questions) per each image. 6 colors (red, green, blue, orange, gray, yellow) are assigned to randomly chosen shape (square or circle), and placed in a image.
 
 Non-relational questions are composed of 3 subtypes:
 
@@ -62,7 +62,7 @@ to train.
 
 ## Result
 
-| | Relational Networks (3rd epoch) | CNN + MLP (without Relational, 10th epoch) |
+| | Relational Networks (3rd epoch) | CNN + MLP (without RN, 10th epoch) |
 | --- | --- | --- |
 | Non-relational question | 57% | 58% |
 | Relational question | 70% | 43% |
