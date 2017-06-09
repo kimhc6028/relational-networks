@@ -51,7 +51,7 @@ And relational questions:
 
 or
 
-  	$ python sort_of_clevr_generator.py
+  	$ python sort_of_clevr_generator.pythe archi
 
 to generate sort-of-clevr dataset
 and
@@ -62,8 +62,11 @@ to train.
 
 ## Result
 
-Accuracy for relational questions: 70% <-> 63% of CNN + MLP written in the paper
+| | Relational Networks (3rd epoch) | CNN + MLP (without Relational, 10th epoch) |
+| --- | --- | --- |
+| Non-relational question | 57% | 58% |
+| Relational question | 70% | 43% |
 
-Accuracy for non-relational questions: 57%
+Relational networks shows far better results in relational questions, as the original paper argues.
 
-On test dataset after 3rd Epoch (Now I keep training...)
+Still this model shows low accuracy overall - I guess it could be the problem of either the architecture of the model, or difference between my dataset and the author's dataset. Please wait for further improvement!
