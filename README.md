@@ -51,7 +51,7 @@ And relational questions:
 
 or
 
-  	$ python sort_of_clevr_generator.pythe archi
+  	$ python sort_of_clevr_generator.py
 
 to generate sort-of-clevr dataset
 and
