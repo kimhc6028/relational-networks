@@ -10,8 +10,8 @@ import random
 import numpy as np
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+#import torch.nn as nn
+#import torch.nn.functional as F
 from torch.autograd import Variable
 
 import model
@@ -39,8 +39,6 @@ args.cuda = not args.no_cuda and torch.cuda.is_available()
 torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
-
-kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
 model = model.RN(args)
 model_dirs = './model'
@@ -135,7 +133,8 @@ def load_data():
     
     print('converting data...')
     datasets = [rel_train, rel_test, norel_train, norel_test]
-    s_datasets = [random.shuffle(dataset) for dataset in datasets]
+    for dataset in datasets:
+        random.shuffle(dataset)
     n_datasets = []
     for dataset in datasets:
         img = [e[0] for e in dataset]

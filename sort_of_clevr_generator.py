@@ -10,7 +10,6 @@ img_size = 75
 size = 5
 question_size = 11 ##6 for one-hot vector of color, 2 for question type, 3 for question subtype
 """Answer : [yes, no, rectangle, circle, r, g, b, o, k, y]"""
-answer_size = 2+2+6
 
 nb_questions = 10
 dirs = './data'
@@ -64,8 +63,8 @@ def build_dataset():
     rel_answers = []
     norel_answers = []
     """Non-relational questions"""
-    for i in range(nb_questions):
-        question = np.zeros((11))
+    for _ in range(nb_questions):
+        question = np.zeros((question_size))
         color = random.randint(0,5)
         question[color] = 1
         question[6] = 1
@@ -97,7 +96,7 @@ def build_dataset():
     
     """Relational questions"""
     for i in range(nb_questions):
-        question = np.zeros((11))
+        question = np.zeros((question_size))
         color = random.randint(0,5)
         question[color] = 1
         question[7] = 1
