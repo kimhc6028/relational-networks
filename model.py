@@ -60,7 +60,7 @@ class RN(nn.Module):
                 x_ = self.g_fc4(x_)
                 x_ = F.relu(x_)
                 x_g += x_
-        x_g = x_g / 625.
+
         """f"""
         x_f = self.f_fc1(x_g)
         x_f = F.relu(x_f)
