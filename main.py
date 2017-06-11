@@ -10,11 +10,10 @@ import random
 import numpy as np
 
 import torch
-#import torch.nn as nn
-#import torch.nn.functional as F
 from torch.autograd import Variable
 
 import model
+
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
@@ -57,8 +56,7 @@ input_img = Variable(input_img)
 input_qst = Variable(input_qst)
 label = Variable(label)
 
-
-def cvt_data(data, i):
+def tensor_data(data, i):
     img = torch.from_numpy(np.asarray(data[0][bs*i:bs*(i+1)]))
     qst = torch.from_numpy(np.asarray(data[1][bs*i:bs*(i+1)]))
     ans = torch.from_numpy(np.asarray(data[2][bs*i:bs*(i+1)]))
@@ -67,18 +65,32 @@ def cvt_data(data, i):
     input_qst.data.resize_(qst.size()).copy_(qst)
     label.data.resize_(ans.size()).copy_(ans)
 
+
+def cvt_data_axis(data):
+    img = [e[0] for e in data]
+    qst = [e[1] for e in data]
+    ans = [e[2] for e in data]
+    return (img,qst,ans)
+
     
 def train(epoch, rel, norel):
     model.train()
+
     if not len(rel[0]) == len(norel[0]):
         print('Not equal length for relation dataset and non-relation dataset.')
         return
     
+    random.shuffle(rel)
+    random.shuffle(norel)
+
+    rel = cvt_data_axis(rel)
+    norel = cvt_data_axis(norel)
+
     for batch_idx in range(len(rel[0]) / bs):
-        cvt_data(rel, batch_idx)
+        tensor_data(rel, batch_idx)
         accuracy_rel = model.train_(input_img, input_qst, label)
 
-        cvt_data(norel, batch_idx)
+        tensor_data(norel, batch_idx)
         accuracy_norel = model.train_(input_img, input_qst, label)
 
         if batch_idx % args.log_interval == 0:
@@ -92,13 +104,16 @@ def test(epoch, rel, norel):
         print('Not equal length for relation dataset and non-relation dataset.')
         return
     
+    rel = cvt_data_axis(rel)
+    norel = cvt_data_axis(norel)
+
     accuracy_rels = []
     accuracy_norels = []
     for batch_idx in range(len(rel[0]) / bs):
-        cvt_data(rel, batch_idx)
+        tensor_data(rel, batch_idx)
         accuracy_rels.append(model.test_(input_img, input_qst, label))
 
-        cvt_data(norel, batch_idx)
+        tensor_data(norel, batch_idx)
         accuracy_norels.append(model.test_(input_img, input_qst, label))
 
     accuracy_rel = sum(accuracy_rels) / len(accuracy_rels)
@@ -117,6 +132,8 @@ def load_data():
     rel_test = []
     norel_train = []
     norel_test = []
+    print('processing data...')
+
     for img, relations, norelations in train_datasets:
         img = np.swapaxes(img,0,2)
         for qst,ans in zip(relations[0], relations[1]):
@@ -131,18 +148,8 @@ def load_data():
         for qst,ans in zip(norelations[0], norelations[1]):
             norel_test.append((img,qst,ans))
     
-    print('converting data...')
-    datasets = [rel_train, rel_test, norel_train, norel_test]
-    for dataset in datasets:
-        random.shuffle(dataset)
-    n_datasets = []
-    for dataset in datasets:
-        img = [e[0] for e in dataset]
-        qst = [e[1] for e in dataset]
-        ans = [e[2] for e in dataset]
-        n_datasets.append((img,qst,ans))
-
-    return tuple(n_datasets)
+    return (rel_train, rel_test, norel_train, norel_test)
+    
 
 rel_train, rel_test, norel_train, norel_test = load_data()
 
