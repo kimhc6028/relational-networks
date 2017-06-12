@@ -65,9 +65,11 @@ In the original paper, Sort-of-CLEVR task used different model with CLEVR task. 
 
 ## Result
 
-| | Relational Networks (20th epoch) | CNN + MLP (without RN, 40th epoch) |
+| | Relational Networks (20th epoch) | CNN + MLP (without RN, 100th epoch) |
 | --- | --- | --- |
-| Non-relational question | 99% | 60% |
-| Relational question | 89% | 71% |
+| Non-relational question | 99% | 66% |
+| Relational question | 89% | 66% |
+
+CNN + MLP occured overfitting to the training data.
 
 Relational networks shows far better results in relational questions and non-relation questions. 
