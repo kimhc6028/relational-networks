@@ -60,13 +60,14 @@ and
 
 to train.
 
+## Modifications
+In the original paper, Sort-of-CLEVR task used different model with CLEVR task. However, because model used CLEVR requires much less time to compute (network is much smaller), this model is used for Sort-of-CLEVR task.
+
 ## Result
 
-| | Relational Networks (3rd epoch) | CNN + MLP (without RN, 10th epoch) |
+| | Relational Networks (20th epoch) | CNN + MLP (without RN, 40th epoch) |
 | --- | --- | --- |
-| Non-relational question | 57% | 58% |
-| Relational question | 70% | 43% |
+| Non-relational question | 99% | 60% |
+| Relational question | 89% | 71% |
 
-Relational networks shows far better results in relational questions, as the original paper argues.
-
-Still this model shows low accuracy overall - I guess it could be the problem of either the architecture of the model, or difference between my dataset and the author's dataset. Please wait for further improvement! (and your pull requests are always welcome!)
+Relational networks shows far better results in relational questions and non-relation questions. 
