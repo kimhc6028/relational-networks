@@ -43,7 +43,7 @@ model = model.RN(args)
 model_dirs = './model'
 bs = args.batch_size
 input_img = torch.FloatTensor(bs, 3, 75, 75)
-input_qst = torch.FloatTensor(bs, 10)
+input_qst = torch.FloatTensor(bs, 11)
 label = torch.LongTensor(bs)
 
 if args.cuda:
