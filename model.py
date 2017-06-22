@@ -1,4 +1,4 @@
-\1;4205;0cimport numpy as np
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
