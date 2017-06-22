@@ -1,4 +1,4 @@
-import numpy as np
+\1;4205;0cimport numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -18,8 +18,9 @@ class RN(nn.Module):
         self.conv4 = nn.Conv2d(24, 24, 3, stride=2, padding=1)
         self.batchNorm4 = nn.BatchNorm2d(24)
         
+        ##(number of filters per object+coordinate of object)*2+question vector
         self.g_fc1 = nn.Linear((24+2)*2+11, 256)
-        #self.g_fc1 = nn.Linear(24*5*5+11, 256)
+
         self.g_fc2 = nn.Linear(256, 256)
         self.g_fc3 = nn.Linear(256, 256)
         self.g_fc4 = nn.Linear(256, 256)
