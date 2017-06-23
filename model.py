@@ -39,8 +39,6 @@ class RN(nn.Module):
         self.coord_oi = Variable(self.coord_oi)
         self.coord_oj = Variable(self.coord_oj)
 
-        self.coord_lst = [torch.from_numpy(np.array([self.cvt_coord(i) for _ in range(args.batch_size)])) for i in range(25)]
-
         # prepare coord tensor
         self.coord_tensor = torch.FloatTensor(args.batch_size, 25, 2)
         if args.cuda:
