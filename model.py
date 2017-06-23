@@ -19,7 +19,7 @@ class RN(nn.Module):
         self.batchNorm4 = nn.BatchNorm2d(24)
         
         ##(number of filters per object+coordinate of object)*2+question vector
-        self.g_fc1 = nn.Linear((24+2)*2+2*11, 256)
+        self.g_fc1 = nn.Linear((24+2)*2+11, 256)
 
         self.g_fc2 = nn.Linear(256, 256)
         self.g_fc3 = nn.Linear(256, 256)
@@ -81,16 +81,17 @@ class RN(nn.Module):
         # add question everywhere
         qst = torch.unsqueeze(qst, 1)
         qst = qst.repeat(1,25,1)
-        x_flat = torch.cat([x_flat, qst],2)
+        qst = torch.unsqueeze(qst, 2)
         # cast all pairs against each other
         x_i = torch.unsqueeze(x_flat,1) # (64x1x25x26+11)
         x_i = x_i.repeat(1,25,1,1) # (64x25x25x26+11)
         x_j = torch.unsqueeze(x_flat,2) # (64x25x1x26+11)
+        x_j = torch.cat([x_j,qst],3)
         x_j = x_j.repeat(1,1,25,1) # (64x25x25x26+11)
         # concatenate all together
-        x_full = torch.cat([x_i,x_j],3) # (64x25x25x2*(26+11))
+        x_full = torch.cat([x_i,x_j],3) # (64x25x25x2*26+11)
         # reshape for passing through network
-        x_ = x_full.view(mb*d*d*d*d,74)
+        x_ = x_full.view(mb*d*d*d*d,63)
         x_ = self.g_fc1(x_)
         x_ = F.relu(x_)
         x_ = self.g_fc2(x_)
