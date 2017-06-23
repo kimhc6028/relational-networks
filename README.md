@@ -73,3 +73,7 @@ In the original paper, Sort-of-CLEVR task used different model with CLEVR task. 
 CNN + MLP occured overfitting to the training data.
 
 Relational networks shows far better results in relational questions and non-relation questions. 
+
+## Contributions
+
+@gngdb speeds up the model by 10 times.
