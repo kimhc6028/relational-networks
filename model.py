@@ -41,6 +41,15 @@ class RN(nn.Module):
 
         self.coord_lst = [torch.from_numpy(np.array([self.cvt_coord(i) for _ in range(args.batch_size)])) for i in range(25)]
 
+        # prepare coord tensor
+        self.coord_tensor = torch.FloatTensor(args.batch_size, 25, 2)
+        if args.cuda:
+            self.coord_tensor = self.coord_tensor.cuda()
+        self.coord_tensor = Variable(self.coord_tensor)
+        np_coord_tensor = np.zeros((args.batch_size, 25, 2))
+        for i in range(25):
+            np_coord_tensor[:,i,:] = np.array(self.cvt_coord(i))
+        self.coord_tensor.data.copy_(torch.from_numpy(np_coord_tensor))
 
     def cvt_coord(self, i):
         return [(i/5-2)/2., (i%5-2)/2.]
@@ -60,27 +69,40 @@ class RN(nn.Module):
         x = self.conv4(x)
         x = F.relu(x)
         x = self.batchNorm4(x)
-        ## x = (64 x 256 x 5 x 5)
+        ## x = (64 x 24 x 5 x 5)
         """g"""
-        x_g = 0
-        for i in range(25):
-            oi = x[:,:,i/5,i%5]
-            self.coord_oi.data.copy_(self.coord_lst[i])
-            oi = torch.cat((oi,self.coord_oi), 1)
-            for j in range(25):
-                oj = x[:,:,j/5,j%5]
-                self.coord_oj.data.copy_(self.coord_lst[j])
-                oj = torch.cat((oj,self.coord_oj), 1)
-                x_ = torch.cat((oi,oj,qst), 1)
-                x_ = self.g_fc1(x_)
-                x_ = F.relu(x_)
-                x_ = self.g_fc2(x_)
-                x_ = F.relu(x_)
-                x_ = self.g_fc3(x_)
-                x_ = F.relu(x_)
-                x_ = self.g_fc4(x_)
-                x_ = F.relu(x_)
-                x_g += x_
+        mb = x.size()[0]
+        n_channels = x.size()[1]
+        d = x.size()[2]
+        # x_flat = (64 x 25 x 24)
+        x_flat = x.view(mb,n_channels,d*d).permute(0,2,1)
+        # add coordinates
+        x_flat = torch.cat([x_flat, self.coord_tensor],2)
+        # add question everywhere
+        qst = torch.unsqueeze(qst, 1)
+        qst = qst.repeat(1,25,1)
+        qst = torch.unsqueeze(qst, 2)
+        # cast all pairs against each other
+        x_i = torch.unsqueeze(x_flat,1) # (64x1x25x26+11)
+        x_i = x_i.repeat(1,25,1,1) # (64x25x25x26+11)
+        x_j = torch.unsqueeze(x_flat,2) # (64x25x1x26+11)
+        x_j = torch.cat([x_j,qst],3)
+        x_j = x_j.repeat(1,1,25,1) # (64x25x25x26+11)
+        # concatenate all together
+        x_full = torch.cat([x_i,x_j],3) # (64x25x25x2*26+11)
+        # reshape for passing through network
+        x_ = x_full.view(mb*d*d*d*d,63)
+        x_ = self.g_fc1(x_)
+        x_ = F.relu(x_)
+        x_ = self.g_fc2(x_)
+        x_ = F.relu(x_)
+        x_ = self.g_fc3(x_)
+        x_ = F.relu(x_)
+        x_ = self.g_fc4(x_)
+        x_ = F.relu(x_)
+        # reshape again and sum
+        x_g = x_.view(mb,d*d*d*d,256)
+        x_g = x_g.sum(1).squeeze()
         """f"""
         x_f = self.f_fc1(x_g)
         x_f = F.relu(x_f)
