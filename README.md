@@ -61,7 +61,7 @@ and
 to train.
 
 ## Modifications
-In the original paper, Sort-of-CLEVR task used different model with CLEVR task. However, because model used CLEVR requires much less time to compute (network is much smaller), this model is used for Sort-of-CLEVR task.
+In the original paper, Sort-of-CLEVR task used different model from CLEVR task. However, because model used CLEVR requires much less time to compute (network is much smaller), this model is used for Sort-of-CLEVR task.
 
 ## Result
 
