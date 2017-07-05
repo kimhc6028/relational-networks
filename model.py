@@ -77,7 +77,7 @@ class BasicModel(nn.Module):
         return accuracy
 
     def save_model(self, epoch):
-        torch.save(self.state_dict(), 'model/epoch_{}_{}.pth'.format(self.name, epoch))
+        torch.save(self.state_dict(), 'model/epoch_{}_{:02d}.pth'.format(self.name, epoch))
 
 
 class RN(BasicModel):
@@ -179,6 +179,7 @@ class CNN_MLP(BasicModel):
         self.fcout = FCOutputModel()
 
         self.optimizer = optim.Adam(self.parameters(), lr=args.lr)
+        #print([ a for a in self.parameters() ] )
   
     def forward(self, img, qst):
         x = self.conv(img, qst) ## x = (64 x 24 x 5 x 5)

@@ -35,7 +35,6 @@ parser.add_argument('--log-interval', type=int, default=10, metavar='N',
 parser.add_argument('--resume', type=str,
                     help='resume from model stored')
 
-
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
