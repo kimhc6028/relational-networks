@@ -5,7 +5,8 @@ Code is based on pytorch/examples/mnist (https://github.com/pytorch/examples/tre
 from __future__ import print_function
 import argparse
 import os
-import cPickle as pickle
+#import cPickle as pickle
+import pickle
 import random
 import numpy as np
 
@@ -86,7 +87,7 @@ def train(epoch, rel, norel):
     rel = cvt_data_axis(rel)
     norel = cvt_data_axis(norel)
 
-    for batch_idx in range(len(rel[0]) / bs):
+    for batch_idx in range(len(rel[0]) // bs):
         tensor_data(rel, batch_idx)
         accuracy_rel = model.train_(input_img, input_qst, label)
 
@@ -109,7 +110,7 @@ def test(epoch, rel, norel):
 
     accuracy_rels = []
     accuracy_norels = []
-    for batch_idx in range(len(rel[0]) / bs):
+    for batch_idx in range(len(rel[0]) // bs):
         tensor_data(rel, batch_idx)
         accuracy_rels.append(model.test_(input_img, input_qst, label))
 
@@ -126,8 +127,8 @@ def load_data():
     print('loading data...')
     dirs = './data'
     filename = os.path.join(dirs,'sort-of-clevr.pickle')
-    f = open(filename, 'r')
-    train_datasets, test_datasets = pickle.load(f)
+    with open(filename, 'rb') as f:
+      train_datasets, test_datasets = pickle.load(f)
     rel_train = []
     rel_test = []
     norel_train = []
