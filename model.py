@@ -20,7 +20,7 @@ class ConvInputModel(nn.Module):
         self.batchNorm4 = nn.BatchNorm2d(24)
 
         
-    def forward(self, img, qst):
+    def forward(self, img):
         """convolution"""
         x = self.conv1(img)
         x = F.relu(x)
@@ -57,7 +57,7 @@ class BasicModel(nn.Module):
     def __init__(self, args, name):
         super(BasicModel, self).__init__()
         self.name=name
-  
+
     def train_(self, input_img, input_qst, label):
         self.optimizer.zero_grad()
         output = self(input_img, input_qst)
@@ -116,12 +116,14 @@ class RN(BasicModel):
             np_coord_tensor[:,i,:] = np.array( cvt_coord(i) )
         self.coord_tensor.data.copy_(torch.from_numpy(np_coord_tensor))
 
+
         self.fcout = FCOutputModel()
         
         self.optimizer = optim.Adam(self.parameters(), lr=args.lr)
 
+
     def forward(self, img, qst):
-        x = self.conv(img, qst) ## x = (64 x 24 x 5 x 5)
+        x = self.conv(img) ## x = (64 x 24 x 5 x 5)
         
         """g"""
         mb = x.size()[0]
@@ -175,18 +177,22 @@ class CNN_MLP(BasicModel):
         super(CNN_MLP, self).__init__(args, 'CNNMLP')
 
         self.conv  = ConvInputModel()
-        self.fc1   = nn.Linear(5 * 5 * 24, 256)
+        self.fc1   = nn.Linear(5*5*24 + 11, 256)  # question concatenated to all
         self.fcout = FCOutputModel()
 
         self.optimizer = optim.Adam(self.parameters(), lr=args.lr)
         #print([ a for a in self.parameters() ] )
   
     def forward(self, img, qst):
-        x = self.conv(img, qst) ## x = (64 x 24 x 5 x 5)
+        x = self.conv(img) ## x = (64 x 24 x 5 x 5)
 
         """fully connected layers"""
-        x = self.fc1(x.view(x.size(0), -1))
-        x = F.relu(x)
+        x = x.view(x.size(0), -1)
         
-        return self.fcout(x)
+        x_ = torch.cat((x, qst), 1)  # Concat question
+        
+        x_ = self.fc1(x_)
+        x_ = F.relu(x_)
+        
+        return self.fcout(x_)
 
