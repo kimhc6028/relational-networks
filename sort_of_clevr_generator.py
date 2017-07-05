@@ -22,7 +22,7 @@ colors = [
     (0,156,255),##o
     (128,128,128),##k
     (0,255,255)##y
-    ]
+]
 
 
 try:
@@ -158,5 +158,5 @@ train_datasets = [build_dataset() for _ in range(train_size)]
 print('saving datasets...')
 filename = os.path.join(dirs,'sort-of-clevr.pickle')
 with  open(filename, 'wb') as f:
-  pickle.dump((train_datasets, test_datasets), f)
+    pickle.dump((train_datasets, test_datasets), f)
 print('datasets saved at {}'.format(filename))
