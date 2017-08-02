@@ -5,17 +5,21 @@ Code is based on pytorch/examples/mnist (https://github.com/pytorch/examples/tre
 from __future__ import print_function
 import argparse
 import os
-import cPickle as pickle
+#import cPickle as pickle
+import pickle
 import random
 import numpy as np
 
 import torch
 from torch.autograd import Variable
 
-import model
+from model import RN, CNN_MLP
+
 
 # Training settings
-parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
+parser = argparse.ArgumentParser(description='PyTorch Relational-Network sort-of-CLVR Example')
+parser.add_argument('--model', type=str, choices=['RN', 'CNN_MLP'], default='RN', 
+                    help='resume from model stored')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 64)')
 parser.add_argument('--epochs', type=int, default=20, metavar='N',
@@ -31,7 +35,6 @@ parser.add_argument('--log-interval', type=int, default=10, metavar='N',
 parser.add_argument('--resume', type=str,
                     help='resume from model stored')
 
-
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -39,7 +42,11 @@ torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
-model = model.RN(args)
+if args.model=='CNN_MLP': 
+  model = CNN_MLP(args)
+else:
+  model = RN(args)
+  
 model_dirs = './model'
 bs = args.batch_size
 input_img = torch.FloatTensor(bs, 3, 75, 75)
@@ -86,7 +93,7 @@ def train(epoch, rel, norel):
     rel = cvt_data_axis(rel)
     norel = cvt_data_axis(norel)
 
-    for batch_idx in range(len(rel[0]) / bs):
+    for batch_idx in range(len(rel[0]) // bs):
         tensor_data(rel, batch_idx)
         accuracy_rel = model.train_(input_img, input_qst, label)
 
@@ -109,7 +116,7 @@ def test(epoch, rel, norel):
 
     accuracy_rels = []
     accuracy_norels = []
-    for batch_idx in range(len(rel[0]) / bs):
+    for batch_idx in range(len(rel[0]) // bs):
         tensor_data(rel, batch_idx)
         accuracy_rels.append(model.test_(input_img, input_qst, label))
 
@@ -126,8 +133,8 @@ def load_data():
     print('loading data...')
     dirs = './data'
     filename = os.path.join(dirs,'sort-of-clevr.pickle')
-    f = open(filename, 'r')
-    train_datasets, test_datasets = pickle.load(f)
+    with open(filename, 'rb') as f:
+      train_datasets, test_datasets = pickle.load(f)
     rel_train = []
     rel_test = []
     norel_train = []
