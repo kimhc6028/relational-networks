@@ -109,7 +109,7 @@ def build_dataset():
             """closest-to->rectangle/circle"""
             my_obj = objects[color][1]
             dist_list = [((my_obj - obj[1]) ** 2).sum() for obj in objects]
-            dist_list[dist_list.index(0)] = 999
+            dist_list[dist_list.index(0)] = 99999
             closest = dist_list.index(min(dist_list))
             if objects[closest][2] == 'r':
                 answer = 2
