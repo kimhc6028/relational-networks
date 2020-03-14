@@ -9,6 +9,7 @@ import os
 import pickle
 import random
 import numpy as np
+import csv
 
 import torch
 from torch.autograd import Variable
@@ -93,17 +94,24 @@ def train(epoch, rel, norel):
     rel = cvt_data_axis(rel)
     norel = cvt_data_axis(norel)
 
+    acc_rels = []
+    acc_norels = []
+
     for batch_idx in range(len(rel[0]) // bs):
         tensor_data(rel, batch_idx)
         accuracy_rel = model.train_(input_img, input_qst, label)
+        acc_rels.append(accuracy_rel.item())
 
         tensor_data(norel, batch_idx)
         accuracy_norel = model.train_(input_img, input_qst, label)
+        acc_norels.append(accuracy_norel.item())
 
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)] Relations accuracy: {:.0f}% | Non-relations accuracy: {:.0f}%'.format(epoch, batch_idx * bs * 2, len(rel[0]) * 2, \
-                                                                                                                           100. * batch_idx * bs/ len(rel[0]), accuracy_rel, accuracy_norel))
-            
+                                                                                                                           100. * batch_idx * bs / len(rel[0]), accuracy_rel, accuracy_norel))
+
+    # return average accuracy                                                                                                                  
+    return sum(acc_rels) / len(acc_rels), sum(acc_norels) / len(acc_norels)
 
 def test(epoch, rel, norel):
     model.eval()
@@ -127,6 +135,7 @@ def test(epoch, rel, norel):
     accuracy_norel = sum(accuracy_norels) / len(accuracy_norels)
     print('\n Test set: Relation accuracy: {:.0f}% | Non-relation accuracy: {:.0f}%\n'.format(
         accuracy_rel, accuracy_norel))
+    return accuracy_rel.item(), accuracy_norel.item()
 
     
 def load_data():
@@ -173,7 +182,13 @@ if args.resume:
         model.load_state_dict(checkpoint)
         print('==> loaded checkpoint {}'.format(filename))
 
-for epoch in range(1, args.epochs + 1):
-    train(epoch, rel_train, norel_train)
-    test(epoch, rel_test, norel_test)
-    model.save_model(epoch)
+with open(f'./{args.model}_{args.seed}_log.csv', 'w') as log_file:
+    writer = csv.writer(log_file, delimiter=',')
+    writer.writerow(['epoch','train_acc_rel', 'train_acc_norel', 'test_acc_rel', 'test_acc_norel'])
+
+    for epoch in range(1, args.epochs + 1):
+        train_acc_rel, train_acc_norel = train(epoch, rel_train, norel_train)
+        test_acc_rel, test_acc_norel = test(epoch, rel_test, norel_test)
+
+        writer.writerow([epoch, train_acc_rel, train_acc_norel, test_acc_rel, test_acc_norel])
+        model.save_model(epoch)
