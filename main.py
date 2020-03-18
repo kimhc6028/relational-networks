@@ -51,7 +51,7 @@ else:
 model_dirs = './model'
 bs = args.batch_size
 input_img = torch.FloatTensor(bs, 3, 75, 75)
-input_qst = torch.FloatTensor(bs, 11)
+input_qst = torch.FloatTensor(bs, 18)
 label = torch.LongTensor(bs)
 
 if args.cuda:
