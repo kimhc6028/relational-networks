@@ -97,8 +97,8 @@ def build_dataset():
                 answer = 1
         norel_answers.append(answer)
     
-    """Relational questions"""
-    for i in range(nb_questions):
+    """Binary Relational questions"""
+    for _ in range(nb_questions):
         question = np.zeros((question_size))
         color = random.randint(0,5)
         question[color] = 1
@@ -136,6 +136,56 @@ def build_dataset():
                 if obj[2] == my_obj:
                     count +=1 
             answer = count+4
+
+        rel_answers.append(answer)
+
+    """Ternary Relational questions"""
+    for _ in range(nb_questions):
+        question = np.zeros((question_size))
+        rnd_colors = np.random.permutation(np.arange(5))
+        # 1st object
+        color1 = rnd_colors[0]
+        question[color1] = 1
+        # 2nd object
+        color2 = rnd_colors[1]
+        question[5 + color2] = 1
+
+        question[q_type_idx+2] = 1
+        subtype = random.randint(0, 2)
+        question[subtype+sub_q_type_idx] = 1
+        rel_questions.append(question)
+
+        if subtype == 0:
+            """between->rectangle/circle"""
+            # TODO: implement this (maybe change answer type)
+        elif subtype == 1:
+            """is-on-line->yes/no"""
+            # TODO: implement this (maybe change answer type)
+        elif subtype == 2:
+            """triangle-has-90-degree->rectangle/circle"""
+            # TODO: implement this
+            # get coordiantes of object from question
+            A = objects[color1][1]
+            B = objects[color2][1]
+
+            for other_obj in objects:
+                # skip question objects
+                if (other_obj[0] == color1) or (other_obj[0] == color2):
+                    continue
+
+                # get position of 3rd object
+                C = other_obj[1]
+                print('colors',color1, color2, other_obj[0])
+                # edge length
+                a = np.linalg.norm(B - C)
+                b = np.linalg.norm(C - A)
+                c = np.linalg.norm(A - B)
+                print('edges',a, b, c)
+                # angles by law of cosine
+                alpha = np.arccos((b ** 2 + c ** 2 - a ** 2) / (2 * b * c))
+                beta = np.arccos((a ** 2 + c ** 2 - b ** 2) / (2 * a * c))
+                gamma = np.arccos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b))
+                print('angles',alpha, beta, gamma)
 
         rel_answers.append(answer)
 
