@@ -4,6 +4,7 @@ import numpy as np
 import random
 #import cPickle as pickle
 import pickle
+import warnings
 
 train_size = 9800
 test_size = 200
@@ -61,8 +62,10 @@ def build_dataset():
             objects.append((color_id,center,'c'))
 
 
+    ternary_questions = []
     rel_questions = []
     norel_questions = []
+    ternary_answers = []
     rel_answers = []
     norel_answers = []
     """Non-relational questions"""
@@ -97,8 +100,8 @@ def build_dataset():
                 answer = 1
         norel_answers.append(answer)
     
-    """Relational questions"""
-    for i in range(nb_questions):
+    """Binary Relational questions"""
+    for _ in range(nb_questions):
         question = np.zeros((question_size))
         color = random.randint(0,5)
         question[color] = 1
@@ -139,11 +142,70 @@ def build_dataset():
 
         rel_answers.append(answer)
 
+    """Ternary Relational questions"""
+    for _ in range(nb_questions):
+        question = np.zeros((question_size))
+        rnd_colors = np.random.permutation(np.arange(5))
+        # 1st object
+        color1 = rnd_colors[0]
+        question[color1] = 1
+        # 2nd object
+        color2 = rnd_colors[1]
+        question[5 + color2] = 1
+
+        question[q_type_idx+2] = 1
+        subtype = random.randint(0, 2)
+        question[subtype+sub_q_type_idx] = 1
+        ternary_questions.append(question)
+
+        if subtype == 0:
+            """between->rectangle/circle"""
+            # TODO: implement this (maybe change answer type)
+        elif subtype == 1:
+            """is-on-line->yes/no"""
+            # TODO: implement this (maybe change answer type)
+        elif subtype == 2:
+            """count-obtuse-triangles->1~6"""
+            # TODO: implement this
+            # get coordiantes of object from question
+            A = objects[color1][1]
+            B = objects[color2][1]
+
+            obtuse_count = 0
+
+            # disable warnings
+            # the angle computation may fail if the points are on a line
+            warnings.filterwarnings("ignore")
+            for other_obj in objects:
+                # skip question objects
+                if (other_obj[0] == color1) or (other_obj[0] == color2):
+                    continue
+
+                # get position of 3rd object
+                C = other_obj[1]
+                # edge length
+                a = np.linalg.norm(B - C)
+                b = np.linalg.norm(C - A)
+                c = np.linalg.norm(A - B)
+                # angles by law of cosine
+                alpha = np.rad2deg(np.arccos((b ** 2 + c ** 2 - a ** 2) / (2 * b * c)))
+                beta = np.rad2deg(np.arccos((a ** 2 + c ** 2 - b ** 2) / (2 * a * c)))
+                gamma = np.rad2deg(np.arccos((a ** 2 + b ** 2 - c ** 2) / (2 * a * b)))
+                max_angle = max(alpha, beta, gamma)
+                if max_angle >= 90 and max_angle < 180:
+                    obtuse_count += 1
+
+            warnings.filterwarnings("default")
+            answer = obtuse_count + 4
+
+        ternary_answers.append(answer)
+
+    ternary = (ternary_questions, ternary_answers)
     relations = (rel_questions, rel_answers)
     norelations = (norel_questions, norel_answers)
     
     img = img/255.
-    dataset = (img, relations, norelations)
+    dataset = (img, ternary, relations, norelations)
     return dataset
 
 
