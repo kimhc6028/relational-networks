@@ -9,7 +9,9 @@ train_size = 9800
 test_size = 200
 img_size = 75
 size = 5
-question_size = 11 ##6 for one-hot vector of color, 2 for question type, 3 for question subtype
+question_size = 18  ## 2 x (6 for one-hot vector of color), 3 for question type, 3 for question subtype
+q_type_idx = 12
+sub_q_type_idx = 15
 """Answer : [yes, no, rectangle, circle, r, g, b, o, k, y]"""
 
 nb_questions = 10
@@ -68,9 +70,9 @@ def build_dataset():
         question = np.zeros((question_size))
         color = random.randint(0,5)
         question[color] = 1
-        question[6] = 1
+        question[q_type_idx] = 1
         subtype = random.randint(0,2)
-        question[subtype+8] = 1
+        question[subtype+sub_q_type_idx] = 1
         norel_questions.append(question)
         """Answer : [yes, no, rectangle, circle, r, g, b, o, k, y]"""
         if subtype == 0:
@@ -100,9 +102,9 @@ def build_dataset():
         question = np.zeros((question_size))
         color = random.randint(0,5)
         question[color] = 1
-        question[7] = 1
+        question[q_type_idx+1] = 1
         subtype = random.randint(0,2)
-        question[subtype+8] = 1
+        question[subtype+sub_q_type_idx] = 1
         rel_questions.append(question)
 
         if subtype == 0:
