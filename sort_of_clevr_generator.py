@@ -63,10 +63,10 @@ def build_dataset():
 
 
     ternary_questions = []
-    rel_questions = []
+    binary_questions = []
     norel_questions = []
     ternary_answers = []
-    rel_answers = []
+    binary_answers = []
     norel_answers = []
     """Non-relational questions"""
     for _ in range(nb_questions):
@@ -108,7 +108,7 @@ def build_dataset():
         question[q_type_idx+1] = 1
         subtype = random.randint(0,2)
         question[subtype+sub_q_type_idx] = 1
-        rel_questions.append(question)
+        binary_questions.append(question)
 
         if subtype == 0:
             """closest-to->rectangle/circle"""
@@ -140,7 +140,7 @@ def build_dataset():
                     count +=1 
             answer = count+4
 
-        rel_answers.append(answer)
+        binary_answers.append(answer)
 
     """Ternary Relational questions"""
     for _ in range(nb_questions):
@@ -200,12 +200,12 @@ def build_dataset():
 
         ternary_answers.append(answer)
 
-    ternary = (ternary_questions, ternary_answers)
-    relations = (rel_questions, rel_answers)
+    ternary_relations = (ternary_questions, ternary_answers)
+    binary_relations = (binary_questions, binary_answers)
     norelations = (norel_questions, norel_answers)
     
     img = img/255.
-    dataset = (img, ternary, relations, norelations)
+    dataset = (img, ternary_relations, binary_relations, norelations)
     return dataset
 
 
