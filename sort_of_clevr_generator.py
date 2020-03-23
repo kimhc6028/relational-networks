@@ -172,8 +172,14 @@ def build_dataset():
                 if (other_obj[0] == color1) or (other_obj[0] == color2):
                     continue
 
-                other_obj_pos = other_obj[1]
-                if A[0] <= other_obj_pos[0] <= B[0] and A[1] <= other_obj_pos[1] <= B[1]:
+                # Get x and y coordinate of third object
+                other_objx = other_obj[1][0]
+                other_objy = other_obj[1][1]
+
+                if (A[0] <= other_objx <= B[0] and A[1] <= other_objy <= B[1]) or \
+                   (A[0] <= other_objx <= B[0] and B[1] <= other_objy <= A[1]) or \
+                   (B[0] <= other_objx <= A[0] and B[1] <= other_objy <= A[1]) or \
+                   (B[0] <= other_objx <= A[0] and A[1] <= other_objy <= B[1]):
                     between_count += 1
 
             answer = between_count + 4
