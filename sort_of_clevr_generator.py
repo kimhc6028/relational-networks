@@ -160,25 +160,46 @@ def build_dataset():
 
         if subtype == 0:
             """between->1~4"""
-            # draw a virtual box between object A and object B and count number of objects inside the box
             A = objects[color1][1]
             B = objects[color2][1]
 
             between_count = 0 
-            # check is any objects lies inside the virtual box
+            # check is any objects lies inside the box
             for other_obj in objects:
-                # skip question objects
+                # skip object A and B
                 if (other_obj[0] == color1) or (other_obj[0] == color2):
                     continue
 
-                other_obj = other_obj[1]
-                if A[0] <= other_obj[0] <= B[0] and A[1] <= other_obj[1] <= B[1]:
+                other_obj_pos = other_obj[1]
+                if A[0] <= other_obj_pos[0] <= B[0] and A[1] <= other_obj_pos[1] <= B[1]:
                     between_count += 1
 
             answer = between_count + 4
         elif subtype == 1:
             """is-on-line->yes/no"""
-            # TODO: implement this (maybe change answer type)
+            A = objects[color1][1]
+            B = objects[color2][1]
+            
+            epsilon = 1e-10  
+            m = (B[1]-A[1])/((B[0]-A[0]) + epsilon ) # Add epsilon to prevent dividing by zero
+            c = A[1] - (m*A[0])
+
+            answer = 1  # Default answer is 'no'
+
+            # check if any object lies on/close the line between object A and object B
+            for other_obj in objects:
+                # skip object A and B
+                if (other_obj[0] == color1) or (other_obj[0] == color2):
+                    continue
+
+                other_obj_pos = other_obj[1]
+                
+                # y = mx + c
+                y = (m*other_obj_pos[0]) + c
+                y = round(y)
+                if y == other_obj_pos[1]:
+                    answer = 0
+
         elif subtype == 2:
             """count-obtuse-triangles->1~6"""
             # get coordiantes of object from question
@@ -191,7 +212,7 @@ def build_dataset():
             # the angle computation may fail if the points are on a line
             warnings.filterwarnings("ignore")
             for other_obj in objects:
-                # skip question objects
+                # skip object A and B
                 if (other_obj[0] == color1) or (other_obj[0] == color2):
                     continue
 
