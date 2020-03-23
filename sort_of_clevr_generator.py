@@ -159,14 +159,28 @@ def build_dataset():
         ternary_questions.append(question)
 
         if subtype == 0:
-            """between->rectangle/circle"""
-            # TODO: implement this (maybe change answer type)
+            """between->1~4"""
+            # draw a virtual box between object A and object B and count number of objects inside the box
+            A = objects[color1][1]
+            B = objects[color2][1]
+
+            between_count = 0 
+            # check is any objects lies inside the virtual box
+            for other_obj in objects:
+                # skip question objects
+                if (other_obj[0] == color1) or (other_obj[0] == color2):
+                    continue
+
+                other_obj = other_obj[1]
+                if A[0] <= other_obj[0] <= B[0] and A[1] <= other_obj[1] <= B[1]:
+                    between_count += 1
+
+            answer = between_count + 4
         elif subtype == 1:
             """is-on-line->yes/no"""
             # TODO: implement this (maybe change answer type)
         elif subtype == 2:
             """count-obtuse-triangles->1~6"""
-            # TODO: implement this
             # get coordiantes of object from question
             A = objects[color1][1]
             B = objects[color2][1]
