@@ -158,10 +158,12 @@ def build_dataset():
         question[subtype+sub_q_type_idx] = 1
         ternary_questions.append(question)
 
+        # get coordiantes of object from question
+        A = objects[color1][1]
+        B = objects[color2][1]
+
         if subtype == 0:
             """between->1~4"""
-            A = objects[color1][1]
-            B = objects[color2][1]
 
             between_count = 0 
             # check is any objects lies inside the box
@@ -177,8 +179,6 @@ def build_dataset():
             answer = between_count + 4
         elif subtype == 1:
             """is-on-line->yes/no"""
-            A = objects[color1][1]
-            B = objects[color2][1]
             
             epsilon = 1e-10  
             m = (B[1]-A[1])/((B[0]-A[0]) + epsilon ) # Add epsilon to prevent dividing by zero
@@ -202,9 +202,6 @@ def build_dataset():
 
         elif subtype == 2:
             """count-obtuse-triangles->1~6"""
-            # get coordiantes of object from question
-            A = objects[color1][1]
-            B = objects[color2][1]
 
             obtuse_count = 0
 
