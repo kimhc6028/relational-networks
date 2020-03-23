@@ -186,11 +186,12 @@ def build_dataset():
         elif subtype == 1:
             """is-on-line->yes/no"""
             
+            grace_threshold = 2.5  # half of the size of objects
             epsilon = 1e-10  
-            m = (B[1]-A[1])/((B[0]-A[0]) + epsilon ) # Add epsilon to prevent dividing by zero
+            m = (B[1]-A[1])/((B[0]-A[0]) + epsilon ) # add epsilon to prevent dividing by zero
             c = A[1] - (m*A[0])
 
-            answer = 1  # Default answer is 'no'
+            answer = 1  # fefault answer is 'no'
 
             # check if any object lies on/close the line between object A and object B
             for other_obj in objects:
@@ -202,10 +203,8 @@ def build_dataset():
                 
                 # y = mx + c
                 y = (m*other_obj_pos[0]) + c
-                y = round(y)
-                if y == other_obj_pos[1]:
+                if (y-grace_threshold)  <= other_obj_pos[1] <= (y+grace_threshold):
                     answer = 0
-
         elif subtype == 2:
             """count-obtuse-triangles->1~6"""
 
