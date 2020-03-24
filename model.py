@@ -86,8 +86,14 @@ class RN(BasicModel):
         
         self.conv = ConvInputModel()
         
-        ##(number of filters per object+coordinate of object)*2+question vector
-        self.g_fc1 = nn.Linear((24+2)*2+18, 256)
+        self.relation_type = args.relation_type
+        
+        if self.relation_type == 'ternary':
+            ##(number of filters per object+coordinate of object)*3+question vector
+            self.g_fc1 = nn.Linear((24+2)*3+18, 256)
+        else:
+            ##(number of filters per object+coordinate of object)*2+question vector
+            self.g_fc1 = nn.Linear((24+2)*2+18, 256)
 
         self.g_fc2 = nn.Linear(256, 256)
         self.g_fc3 = nn.Linear(256, 256)
@@ -135,23 +141,53 @@ class RN(BasicModel):
         # add coordinates
         x_flat = torch.cat([x_flat, self.coord_tensor],2)
         
-        # add question everywhere
-        qst = torch.unsqueeze(qst, 1)
-        qst = qst.repeat(1,25,1)
-        qst = torch.unsqueeze(qst, 2)
+
+        if self.relation_type == 'ternary':
+            # add question everywhere
+            qst = torch.unsqueeze(qst, 1) # (64x1x18)
+            qst = qst.repeat(1, 25, 1) # (64x25x18)
+            qst = torch.unsqueeze(qst, 2)  # (64x25x1x18)
+            qst = torch.unsqueeze(qst, 3)  # (64x25x1x1x18)
+
+            # cast all pairs against each other
+            x_i = torch.unsqueeze(x_flat, 1)  # (64x1x25x26+18)
+            x_i = torch.unsqueeze(x_i, 3)  # (64x1x25x1x26+18)
+            x_i = x_i.repeat(1, 25, 1, 25, 1)  # (64x25x25x25x26+18)
+            
+            x_j = torch.unsqueeze(x_flat, 2)  # (64x25x1x26+18)
+            x_j = torch.unsqueeze(x_j, 2)  # (64x25x1x1x26+18)
+            x_j = torch.cat([x_j, qst], 4)
+            x_j = x_j.repeat(1, 1, 25, 25, 1)  # (64x25x25x25x26+18)
+
+            x_k = torch.unsqueeze(x_flat, 1)  # (64x1x25x26+18)
+            x_k = torch.unsqueeze(x_k, 1)  # (64x1x1x25x26+18)
+            x_k = x_k.repeat(1, 25, 25, 1, 1)  # (64x25x25x25x26+18)
+
+
+            # concatenate all together
+            x_full = torch.cat([x_i, x_j, x_k], 4)  # (64x25x25x25x3*26+18)
+
+            # reshape for passing through network
+            x_ = x_full.view(mb*(d*d)*(d*d)*(d*d), 96)  # (64*25*25*25x3*26*18) = (1.000.000, 96)
+        else:
+            # add question everywhere
+            qst = torch.unsqueeze(qst, 1)
+            qst = qst.repeat(1, 25, 1)
+            qst = torch.unsqueeze(qst, 2)
+
+            # cast all pairs against each other
+            x_i = torch.unsqueeze(x_flat, 1)  # (64x1x25x26+18)
+            x_i = x_i.repeat(1, 25, 1, 1)  # (64x25x25x26+18)
+            x_j = torch.unsqueeze(x_flat, 2)  # (64x25x1x26+18)
+            x_j = torch.cat([x_j, qst], 3)
+            x_j = x_j.repeat(1, 1, 25, 1)  # (64x25x25x26+18)
+            
+            # concatenate all together
+            x_full = torch.cat([x_i,x_j],3) # (64x25x25x2*26+18)
         
-        # cast all pairs against each other
-        x_i = torch.unsqueeze(x_flat,1) # (64x1x25x26+18)
-        x_i = x_i.repeat(1,25,1,1) # (64x25x25x26+18)
-        x_j = torch.unsqueeze(x_flat,2) # (64x25x1x26+18)
-        x_j = torch.cat([x_j,qst],3)
-        x_j = x_j.repeat(1,1,25,1) # (64x25x25x26+18)
-        
-        # concatenate all together
-        x_full = torch.cat([x_i,x_j],3) # (64x25x25x2*26+18)
-        
-        # reshape for passing through network
-        x_ = x_full.view(mb*d*d*d*d,70) # (64*25*25x2*26*18)
+            # reshape for passing through network
+            x_ = x_full.view(mb * (d * d) * (d * d), 70)  # (64*25*25x2*26*18) = (40.000, 70)
+            
         x_ = self.g_fc1(x_)
         x_ = F.relu(x_)
         x_ = self.g_fc2(x_)
@@ -162,7 +198,11 @@ class RN(BasicModel):
         x_ = F.relu(x_)
         
         # reshape again and sum
-        x_g = x_.view(mb,d*d*d*d,256)
+        if self.relation_type == 'ternary':
+            x_g = x_.view(mb, (d * d) * (d * d) * (d * d), 256)
+        else:
+            x_g = x_.view(mb, (d * d) * (d * d), 256)
+
         x_g = x_g.sum(1).squeeze()
         
         """f"""
