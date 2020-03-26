@@ -5,6 +5,15 @@ import random
 #import cPickle as pickle
 import pickle
 import warnings
+import argparse
+
+parser = argparse.ArgumentParser(description='Sort-of-CLEVR dataset generator')
+parser.add_argument('--seed', type=int, default=1, metavar='S',
+                    help='random seed (default: 1)')
+args = parser.parse_args()
+
+random.seed(args.seed)
+np.random.seed(args.seed)
 
 train_size = 9800
 test_size = 200
