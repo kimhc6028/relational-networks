@@ -5,6 +5,15 @@ import random
 #import cPickle as pickle
 import pickle
 import warnings
+import argparse
+
+parser = argparse.ArgumentParser(description='Sort-of-CLEVR dataset generator')
+parser.add_argument('--seed', type=int, default=1, metavar='S',
+                    help='random seed (default: 1)')
+args = parser.parse_args()
+
+random.seed(args.seed)
+np.random.seed(args.seed)
 
 train_size = 9800
 test_size = 200
@@ -191,7 +200,7 @@ def build_dataset():
             m = (B[1]-A[1])/((B[0]-A[0]) + epsilon ) # add epsilon to prevent dividing by zero
             c = A[1] - (m*A[0])
 
-            answer = 1  # fefault answer is 'no'
+            answer = 1  # default answer is 'no'
 
             # check if any object lies on/close the line between object A and object B
             for other_obj in objects:
@@ -203,7 +212,7 @@ def build_dataset():
                 
                 # y = mx + c
                 y = (m*other_obj_pos[0]) + c
-                if (y-grace_threshold)  <= other_obj_pos[1] <= (y+grace_threshold):
+                if (y - grace_threshold)  <= other_obj_pos[1] <= (y + grace_threshold):
                     answer = 0
         elif subtype == 2:
             """count-obtuse-triangles->1~6"""
