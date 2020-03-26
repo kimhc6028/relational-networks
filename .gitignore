@@ -1,3 +1,6 @@
+# Tensorboard logging directory
+/runs
+
 # Directory for generated dataset
 /data
 # Direcotry for saved training check points
