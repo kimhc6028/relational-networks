@@ -51,8 +51,6 @@ class FCOutputModel(nn.Module):
         x = self.fc3(x)
         return F.log_softmax(x)
 
-  
-
 class BasicModel(nn.Module):
     def __init__(self, args, name):
         super(BasicModel, self).__init__()
@@ -146,29 +144,28 @@ class RN(BasicModel):
             # add question everywhere
             qst = torch.unsqueeze(qst, 1) # (64x1x18)
             qst = qst.repeat(1, 25, 1) # (64x25x18)
-            qst = torch.unsqueeze(qst, 2)  # (64x25x1x18)
-            qst = torch.unsqueeze(qst, 3)  # (64x25x1x1x18)
+            qst = torch.unsqueeze(qst, 1)  # (64x1x25x18)
+            qst = torch.unsqueeze(qst, 1)  # (64x1x1x25x18)
 
-            # cast all pairs against each other
-            x_i = torch.unsqueeze(x_flat, 1)  # (64x1x25x26+18)
-            x_i = torch.unsqueeze(x_i, 3)  # (64x1x25x1x26+18)
-            x_i = x_i.repeat(1, 25, 1, 25, 1)  # (64x25x25x25x26+18)
+            # cast all triples against each other
+            x_i = torch.unsqueeze(x_flat, 1)  # (64x1x25x26)
+            x_i = torch.unsqueeze(x_i, 3)  # (64x1x25x1x26)
+            x_i = x_i.repeat(1, 25, 1, 25, 1)  # (64x25x25x25x26)
             
-            x_j = torch.unsqueeze(x_flat, 2)  # (64x25x1x26+18)
-            x_j = torch.unsqueeze(x_j, 2)  # (64x25x1x1x26+18)
-            x_j = torch.cat([x_j, qst], 4)
-            x_j = x_j.repeat(1, 1, 25, 25, 1)  # (64x25x25x25x26+18)
+            x_j = torch.unsqueeze(x_flat, 2)  # (64x25x1x26)
+            x_j = torch.unsqueeze(x_j, 2)  # (64x25x1x1x26)
+            x_j = x_j.repeat(1, 1, 25, 25, 1)  # (64x25x25x25x26)
 
-            x_k = torch.unsqueeze(x_flat, 1)  # (64x1x25x26+18)
-            x_k = torch.unsqueeze(x_k, 1)  # (64x1x1x25x26+18)
+            x_k = torch.unsqueeze(x_flat, 1)  # (64x1x25x26)
+            x_k = torch.unsqueeze(x_k, 1)  # (64x1x1x25x26)
+            x_k = torch.cat([x_k, qst], 4)  # (64x1x1x25x26+18)
             x_k = x_k.repeat(1, 25, 25, 1, 1)  # (64x25x25x25x26+18)
-
 
             # concatenate all together
             x_full = torch.cat([x_i, x_j, x_k], 4)  # (64x25x25x25x3*26+18)
 
             # reshape for passing through network
-            x_ = x_full.view(mb*(d*d)*(d*d)*(d*d), 96)  # (64*25*25*25x3*26*18) = (1.000.000, 96)
+            x_ = x_full.view(mb * (d * d) * (d * d) * (d * d), 96)  # (64*25*25*25x3*26+18) = (1.000.000, 96)
         else:
             # add question everywhere
             qst = torch.unsqueeze(qst, 1)
