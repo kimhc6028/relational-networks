@@ -208,6 +208,8 @@ with open(f'./{args.model}_{args.seed}_log.csv', 'w') as log_file:
     writer.writerow(['epoch', 'train_acc_ternary','train_acc_binary',
                      'train_acc_unary', 'train_acc_ternary', 'test_acc_binary', 'test_acc_unary'])
 
+    print(f"Training {args.model} {f'({args.relation_type})' if args.model == 'RN' else ''} model...")
+
     for epoch in range(1, args.epochs + 1):
         train_acc_ternary, train_acc_binary, train_acc_unary = train(
             epoch, ternary_train, rel_train, norel_train)
