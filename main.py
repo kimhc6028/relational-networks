@@ -35,6 +35,8 @@ parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--resume', type=str,
                     help='resume from model stored')
+parser.add_argument('--relation-type', type=str, default='binary',
+                    help='what kind of relations to learn. options: binary, ternary (default: binary)')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -114,7 +116,7 @@ def train(epoch, ternary, rel, norel):
         acc_norels.append(accuracy_norel.item())
 
         if batch_idx % args.log_interval == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)] Ternary accuracy: {:.0f}% | Relations accuracy: {:.0f}% | Non-relations accuracy: {:.0f}%'.format(epoch, batch_idx * bs * 2, len(rel[0]) * 2,
+            print('Train Epoch: {} [{}/{} ({:.0f}%)] Ternary accuracy: {:.0f}% | Binary accuracy: {:.0f}% | Unary accuracy: {:.0f}%'.format(epoch, batch_idx * bs * 2, len(rel[0]) * 2,
                                                                                                                            100. * batch_idx * bs / len(rel[0]), accuracy_ternary, accuracy_rel, accuracy_norel))
 
     # return average accuracy                                                                                                                  
@@ -146,7 +148,7 @@ def test(epoch, ternary, rel, norel):
     accuracy_ternary = sum(accuracy_ternary) / len(accuracy_ternary)
     accuracy_rel = sum(accuracy_rels) / len(accuracy_rels)
     accuracy_norel = sum(accuracy_norels) / len(accuracy_norels)
-    print('\n Test set: Teneray accuracy: {:.0f}% Relation accuracy: {:.0f}% | Non-relation accuracy: {:.0f}%\n'.format(
+    print('\n Test set: Teneray accuracy: {:.0f}% Binary accuracy: {:.0f}% | Unary accuracy: {:.0f}%\n'.format(
         accuracy_ternary, accuracy_rel, accuracy_norel))
     return accuracy_ternary.item(), accuracy_rel.item(), accuracy_norel.item()
 
@@ -203,15 +205,15 @@ if args.resume:
 
 with open(f'./{args.model}_{args.seed}_log.csv', 'w') as log_file:
     writer = csv.writer(log_file, delimiter=',')
-    writer.writerow(['epoch', 'train_acc_ternary','train_acc_rel',
-                     'train_acc_norel', 'train_acc_ternary', 'test_acc_rel', 'test_acc_norel'])
+    writer.writerow(['epoch', 'train_acc_ternary','train_acc_binary',
+                     'train_acc_unary', 'train_acc_ternary', 'test_acc_binary', 'test_acc_unary'])
 
     for epoch in range(1, args.epochs + 1):
-        train_acc_ternary, train_acc_rel, train_acc_norel = train(
+        train_acc_ternary, train_acc_binary, train_acc_unary = train(
             epoch, ternary_train, rel_train, norel_train)
-        test_acc_ternary, test_acc_rel, test_acc_norel = test(
+        test_acc_ternary, test_acc_binary, test_acc_unary = test(
             epoch, ternary_test, rel_test, norel_test)
 
-        writer.writerow([epoch, train_acc_ternary, train_acc_rel,
-                         train_acc_norel, test_acc_ternary, test_acc_rel, test_acc_norel])
+        writer.writerow([epoch, train_acc_ternary, train_acc_binary, train_acc_unary,
+                         test_acc_ternary, test_acc_binary, test_acc_unary])
         model.save_model(epoch)
