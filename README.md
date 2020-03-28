@@ -42,7 +42,7 @@ And relational questions:
 
 Create conda environment from `environment.yml` file
 ```
-$ conda env create -n conda-env -f ./environment.yml
+$ conda env create -f environment.yml
 ```
 Activate environment
 ```
