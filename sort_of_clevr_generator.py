@@ -160,7 +160,7 @@ def build_dataset():
         question[color1] = 1
         # 2nd object
         color2 = rnd_colors[1]
-        question[5 + color2] = 1
+        question[6 + color2] = 1
 
         question[q_type_idx+2] = 1
         subtype = random.randint(0, 2)
