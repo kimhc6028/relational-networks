@@ -1,3 +1,6 @@
+# Slurm job files
+/jobs
+
 # Tensorboard logging directory
 /runs
 
