@@ -49,7 +49,7 @@ class FCOutputModel(nn.Module):
         x = F.relu(x)
         x = F.dropout(x)
         x = self.fc3(x)
-        return F.log_softmax(x)
+        return F.log_softmax(x, dim=1)
 
 class BasicModel(nn.Module):
     def __init__(self, args, name):
