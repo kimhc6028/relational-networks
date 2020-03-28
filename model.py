@@ -65,14 +65,15 @@ class BasicModel(nn.Module):
         pred = output.data.max(1)[1]
         correct = pred.eq(label.data).cpu().sum()
         accuracy = correct * 100. / len(label)
-        return accuracy
+        return accuracy, loss
         
     def test_(self, input_img, input_qst, label):
         output = self(input_img, input_qst)
+        loss = F.nll_loss(output, label)
         pred = output.data.max(1)[1]
         correct = pred.eq(label.data).cpu().sum()
         accuracy = correct * 100. / len(label)
-        return accuracy
+        return accuracy, loss
 
     def save_model(self, epoch):
         torch.save(self.state_dict(), 'model/epoch_{}_{:02d}.pth'.format(self.name, epoch))
