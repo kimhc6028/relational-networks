@@ -12,6 +12,7 @@ import numpy as np
 import csv
 
 import torch
+from torch.utils.tensorboard import SummaryWriter
 from torch.autograd import Variable
 
 from model import RN, CNN_MLP
@@ -44,6 +45,8 @@ args.cuda = not args.no_cuda and torch.cuda.is_available()
 torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
+
+summary_writer = SummaryWriter()
 
 if args.model=='CNN_MLP': 
   model = CNN_MLP(args)
@@ -102,25 +105,59 @@ def train(epoch, ternary, rel, norel):
     acc_rels = []
     acc_norels = []
 
+    l_ternary = []
+    l_binary = []
+    l_unary = []
+
     for batch_idx in range(len(rel[0]) // bs):
         tensor_data(ternary, batch_idx)
-        accuracy_ternary = model.train_(input_img, input_qst, label)
+        accuracy_ternary, loss_ternary = model.train_(input_img, input_qst, label)
         acc_ternary.append(accuracy_ternary.item())
+        l_ternary.append(loss_ternary.item())
 
         tensor_data(rel, batch_idx)
-        accuracy_rel = model.train_(input_img, input_qst, label)
+        accuracy_rel, loss_binary = model.train_(input_img, input_qst, label)
         acc_rels.append(accuracy_rel.item())
+        l_binary.append(loss_binary.item())
 
         tensor_data(norel, batch_idx)
-        accuracy_norel = model.train_(input_img, input_qst, label)
+        accuracy_norel, loss_unary = model.train_(input_img, input_qst, label)
         acc_norels.append(accuracy_norel.item())
+        l_unary.append(loss_unary.item())
 
         if batch_idx % args.log_interval == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)] Ternary accuracy: {:.0f}% | Binary accuracy: {:.0f}% | Unary accuracy: {:.0f}%'.format(epoch, batch_idx * bs * 2, len(rel[0]) * 2,
-                                                                                                                           100. * batch_idx * bs / len(rel[0]), accuracy_ternary, accuracy_rel, accuracy_norel))
+            print('Train Epoch: {} [{}/{} ({:.0f}%)] '
+                  'Ternary accuracy: {:.0f}% | Relations accuracy: {:.0f}% | Non-relations accuracy: {:.0f}%'.format(
+                   epoch,
+                   batch_idx * bs * 2,
+                   len(rel[0]) * 2,
+                   100. * batch_idx * bs / len(rel[0]),
+                   accuracy_ternary,
+                   accuracy_rel,
+                   accuracy_norel))
+        
+    avg_acc_ternary = sum(acc_ternary) / len(acc_ternary)
+    avg_acc_binary = sum(acc_rels) / len(acc_rels)
+    avg_acc_unary = sum(acc_norels) / len(acc_norels)
 
-    # return average accuracy                                                                                                                  
-    return sum(acc_ternary) / len(acc_ternary), sum(acc_rels) / len(acc_rels), sum(acc_norels) / len(acc_norels)
+    summary_writer.add_scalars('Accuracy/train', {
+        'ternary': avg_acc_ternary,
+        'binary': avg_acc_binary,
+        'unary': avg_acc_unary
+    }, epoch)
+
+    avg_loss_ternary = sum(l_ternary) / len(l_ternary)
+    avg_loss_binary = sum(l_binary) / len(l_binary)
+    avg_loss_unary = sum(l_unary) / len(l_unary)
+
+    summary_writer.add_scalars('Loss/train', {
+        'ternary': avg_loss_ternary,
+        'binary': avg_loss_binary,
+        'unary': avg_loss_unary
+    }, epoch)
+
+    # return average accuracy
+    return avg_acc_ternary, avg_acc_binary, avg_acc_unary
 
 def test(epoch, ternary, rel, norel):
     model.eval()
@@ -135,22 +172,50 @@ def test(epoch, ternary, rel, norel):
     accuracy_ternary = []
     accuracy_rels = []
     accuracy_norels = []
+
+    loss_ternary = []
+    loss_binary = []
+    loss_unary = []
+
     for batch_idx in range(len(rel[0]) // bs):
         tensor_data(ternary, batch_idx)
-        accuracy_ternary.append(model.test_(input_img, input_qst, label))
+        acc_ter, l_ter = model.test_(input_img, input_qst, label)
+        accuracy_ternary.append(acc_ter.item())
+        loss_ternary.append(l_ter.item())
 
         tensor_data(rel, batch_idx)
-        accuracy_rels.append(model.test_(input_img, input_qst, label))
+        acc_bin, l_bin = model.test_(input_img, input_qst, label)
+        accuracy_rels.append(acc_bin.item())
+        loss_binary.append(l_bin.item())
 
         tensor_data(norel, batch_idx)
-        accuracy_norels.append(model.test_(input_img, input_qst, label))
+        acc_un, l_un = model.test_(input_img, input_qst, label)
+        accuracy_norels.append(acc_un.item())
+        loss_unary.append(l_un.item())
 
     accuracy_ternary = sum(accuracy_ternary) / len(accuracy_ternary)
     accuracy_rel = sum(accuracy_rels) / len(accuracy_rels)
     accuracy_norel = sum(accuracy_norels) / len(accuracy_norels)
-    print('\n Test set: Teneray accuracy: {:.0f}% Binary accuracy: {:.0f}% | Unary accuracy: {:.0f}%\n'.format(
+    print('\n Test set: Ternary accuracy: {:.0f}% Binary accuracy: {:.0f}% | Unary accuracy: {:.0f}%\n'.format(
         accuracy_ternary, accuracy_rel, accuracy_norel))
-    return accuracy_ternary.item(), accuracy_rel.item(), accuracy_norel.item()
+
+    summary_writer.add_scalars('Accuracy/test', {
+        'ternary': accuracy_ternary,
+        'binary': accuracy_rel,
+        'unary': accuracy_norel
+    }, epoch)
+
+    loss_ternary = sum(loss_ternary) / len(loss_ternary)
+    loss_binary = sum(loss_binary) / len(loss_binary)
+    loss_unary = sum(loss_unary) / len(loss_unary)
+
+    summary_writer.add_scalars('Loss/test', {
+        'ternary': loss_ternary,
+        'binary': loss_binary,
+        'unary': loss_unary
+    }, epoch)
+
+    return accuracy_ternary, accuracy_rel, accuracy_norel
 
     
 def load_data():
@@ -204,9 +269,11 @@ if args.resume:
         print('==> loaded checkpoint {}'.format(filename))
 
 with open(f'./{args.model}_{args.seed}_log.csv', 'w') as log_file:
-    writer = csv.writer(log_file, delimiter=',')
-    writer.writerow(['epoch', 'train_acc_ternary','train_acc_binary',
-                     'train_acc_unary', 'train_acc_ternary', 'test_acc_binary', 'test_acc_unary'])
+    csv_writer = csv.writer(log_file, delimiter=',')
+    csv_writer.writerow(['epoch', 'train_acc_ternary', 'train_acc_rel',
+                     'train_acc_norel', 'train_acc_ternary', 'test_acc_rel', 'test_acc_norel'])
+
+    print(f"Training {args.model} {f'({args.relation_type})' if args.model == 'RN' else ''} model...")
 
     for epoch in range(1, args.epochs + 1):
         train_acc_ternary, train_acc_binary, train_acc_unary = train(
@@ -214,6 +281,6 @@ with open(f'./{args.model}_{args.seed}_log.csv', 'w') as log_file:
         test_acc_ternary, test_acc_binary, test_acc_unary = test(
             epoch, ternary_test, rel_test, norel_test)
 
-        writer.writerow([epoch, train_acc_ternary, train_acc_binary, train_acc_unary,
-                         test_acc_ternary, test_acc_binary, test_acc_unary])
+        csv_writer.writerow([epoch, train_acc_ternary, train_acc_binary,
+                         train_acc_unary, test_acc_ternary, test_acc_binary, test_acc_unary])
         model.save_model(epoch)

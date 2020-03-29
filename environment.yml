@@ -23,4 +23,6 @@ dependencies:
     - numpy==1.18.1
     - opencv-python==4.2.0.32
     - torch==1.4.0
+    - tensorboard==2.2.0
+    - tensorboard-plugin-wit==1.6.0.post2
 prefix: ~/miniconda3/envs/RN3

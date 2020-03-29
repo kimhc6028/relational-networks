@@ -1,3 +1,9 @@
+# Slurm job files
+/jobs
+
+# Tensorboard logging directory
+/runs
+
 # Directory for generated dataset
 /data
 # Direcotry for saved training check points
@@ -149,3 +155,4 @@ media
 static
 
 .vscode/
+.idea

@@ -42,7 +42,7 @@ And relational questions:
 
 Create conda environment from `environment.yml` file
 ```
-$ conda env create -n conda-env -f ./environment.yml
+$ conda env create -f environment.yml
 ```
 Activate environment
 ```
@@ -63,7 +63,12 @@ and
 
  	 $ python main.py 
 
-to train.
+to train the binary RN model. 
+Alternatively, use 
+
+ 	 $ python main.py --relation-type=ternary
+
+to train the ternary RN model.
 
 ## Modifications
 In the original paper, Sort-of-CLEVR task used different model from CLEVR task. However, because model used CLEVR requires much less time to compute (network is much smaller), this model is used for Sort-of-CLEVR task.
