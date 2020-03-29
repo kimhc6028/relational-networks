@@ -196,7 +196,7 @@ def test(epoch, ternary, rel, norel):
     accuracy_ternary = sum(accuracy_ternary) / len(accuracy_ternary)
     accuracy_rel = sum(accuracy_rels) / len(accuracy_rels)
     accuracy_norel = sum(accuracy_norels) / len(accuracy_norels)
-    print('\n Test set: Teneray accuracy: {:.0f}% Binary accuracy: {:.0f}% | Unary accuracy: {:.0f}%\n'.format(
+    print('\n Test set: Ternary accuracy: {:.0f}% Binary accuracy: {:.0f}% | Unary accuracy: {:.0f}%\n'.format(
         accuracy_ternary, accuracy_rel, accuracy_norel))
 
     summary_writer.add_scalars('Accuracy/test', {
