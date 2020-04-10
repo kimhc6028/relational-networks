@@ -200,9 +200,9 @@ def build_dataset():
 
             answer = between_count + 4
         elif subtype == 1:
-            """is-on-line->yes/no"""
+            """is-on-band->yes/no"""
             
-            grace_threshold = 2.5  # half of the size of objects
+            grace_threshold = 12  # half of the size of objects
             epsilon = 1e-10  
             m = (B[1]-A[1])/((B[0]-A[0]) + epsilon ) # add epsilon to prevent dividing by zero
             c = A[1] - (m*A[0])
