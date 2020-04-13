@@ -38,12 +38,17 @@ And relational questions:
 2) What is the shape of the object furthest to the orange object? => circle
 3) How many objects have same shape with the blue object? => 3
 
-## Requirements
+## Setup
 
-- Python 2.7
-- [numpy](http://www.numpy.org/)
-- [pytorch](http://pytorch.org/)
-- [opencv](http://opencv.org/)
+Create conda environment from `environment.yml` file
+```
+$ conda env create -f environment.yml
+```
+Activate environment
+```
+$ conda activate RN3
+```
+If you don't use conda install python 3 normally and use `pip install` to install remaining dependencies. The list of dependencies can be found in the `environment.yml` file.
 
 ## Usage
 
@@ -58,7 +63,12 @@ and
 
  	 $ python main.py 
 
-to train.
+to train the binary RN model. 
+Alternatively, use 
+
+ 	 $ python main.py --relation-type=ternary
+
+to train the ternary RN model.
 
 ## Modifications
 In the original paper, Sort-of-CLEVR task used different model from CLEVR task. However, because model used CLEVR requires much less time to compute (network is much smaller), this model is used for Sort-of-CLEVR task.
