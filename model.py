@@ -166,7 +166,7 @@ class RN(BasicModel):
             x_full = torch.cat([x_i, x_j, x_k], 4)  # (64x25x25x25x3*26+18)
 
             # reshape for passing through network
-            x_ = x_full.view(mb * (d * d) * (d * d) * (d * d), 96)  # (64*25*25*25x3*26+18) = (1.000.000, 96)
+            x_ = x_full.view(mb, (d * d) * (d * d) * (d * d), 96)  # (64x25*25*25x3*26+18) = (64, 15625, 96)
         else:
             # add question everywhere
             qst = torch.unsqueeze(qst, 1)
@@ -184,7 +184,7 @@ class RN(BasicModel):
             x_full = torch.cat([x_i,x_j],3) # (64x25x25x2*26+18)
         
             # reshape for passing through network
-            x_ = x_full.view(mb * (d * d) * (d * d), 70)  # (64*25*25x2*26*18) = (40.000, 70)
+            x_ = x_full.view(mb, (d * d) * (d * d), 70)  # (64x25*25x2*26*18) = (64, 625, 70)
             
         x_ = self.g_fc1(x_)
         x_ = F.relu(x_)
@@ -195,13 +195,8 @@ class RN(BasicModel):
         x_ = self.g_fc4(x_)
         x_ = F.relu(x_)
         
-        # reshape again and sum
-        if self.relation_type == 'ternary':
-            x_g = x_.view(mb, (d * d) * (d * d) * (d * d), 256)
-        else:
-            x_g = x_.view(mb, (d * d) * (d * d), 256)
-
-        x_g = x_g.sum(1).squeeze()
+        # sum
+        x_g = x_.sum(1).squeeze()
         
         """f"""
         x_f = self.f_fc1(x_g)
