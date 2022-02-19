@@ -1,28 +1,103 @@
 name: RN3
 channels:
+  - pytorch
   - defaults
 dependencies:
-  - ca-certificates
-  - certifi
-  - libcxx
-  - libcxxabi
-  - libedit
-  - libffi
-  - ncurses
-  - openssl
-  - pip=20.0.2=py38_1
-  - python=3.8.1
-  - readline
-  - setuptools
-  - sqlite=3.31.1
-  - tk
-  - wheel
-  - xz
-  - zlib
+  - blas=1.0=mkl
+  - ca-certificates=2021.10.26=haa95532_2
+  - certifi=2021.10.8=py38haa95532_0
+  - cudatoolkit=11.3.1=h59b6b97_2
+  - freetype=2.10.4=hd328e21_0
+  - intel-openmp=2021.4.0=haa95532_3556
+  - jpeg=9d=h2bbff1b_0
+  - libpng=1.6.37=h2a8f88b_0
+  - libtiff=4.2.0=hd0e1b90_0
+  - libuv=1.40.0=he774522_0
+  - libwebp=1.2.0=h2bbff1b_0
+  - lz4-c=1.9.3=h2bbff1b_1
+  - mkl=2021.4.0=haa95532_640
+  - mkl-service=2.4.0=py38h2bbff1b_0
+  - mkl_fft=1.3.1=py38h277e83a_0
+  - mkl_random=1.2.2=py38hf11a4ad_0
+  - numpy-base=1.21.2=py38h0829f74_0
+  - olefile=0.46=pyhd3eb1b0_0
+  - openssl=1.1.1l=h2bbff1b_0
+  - pillow=8.4.0=py38hd45dc43_0
+  - pip=21.2.2=py38haa95532_0
+  - python=3.8.1=h5fd99cc_8_cpython
+  - pytorch=1.10.1=py3.8_cuda11.3_cudnn8_0
+  - pytorch-mutex=1.0=cuda
+  - setuptools=58.0.4=py38haa95532_0
+  - six=1.16.0=pyhd3eb1b0_0
+  - sqlite=3.31.1=h2a8f88b_1
+  - tk=8.6.11=h2bbff1b_0
+  - torchaudio=0.10.1=py38_cu113
+  - torchvision=0.11.2=py38_cu113
+  - typing_extensions=3.10.0.2=pyh06a4308_0
+  - vc=14.2=h21ff451_1
+  - vs2015_runtime=14.27.29016=h5e58377_2
+  - wheel=0.37.0=pyhd3eb1b0_1
+  - wincertstore=0.2=py38haa95532_2
+  - xz=5.2.5=h62dcd97_0
+  - zlib=1.2.11=h8cc25b3_4
+  - zstd=1.4.9=h19a0ad4_0
   - pip:
+    - absl-py==1.0.0
+    - altgraph==0.17.2
+    - cachetools==4.2.4
+    - charset-normalizer==2.0.9
+    - click==7.1.2
+    - colorama==0.4.4
+    - filelock==3.4.2
+    - future==0.18.2
+    - google-auth==1.35.0
+    - google-auth-oauthlib==0.4.6
+    - grpcio==1.43.0
+    - huggingface-hub==0.4.0
+    - idna==3.3
+    - importlib-metadata==4.10.0
+    - joblib==1.1.0
+    - markdown==3.3.6
     - numpy==1.18.1
+    - oauthlib==3.1.1
     - opencv-python==4.2.0.32
-    - torch==1.4.0
+    - packaging==21.3
+    - pandas==1.3.5
+    - pefile==2021.9.3
+    - protobuf==3.19.1
+    - pyasn1==0.4.8
+    - pyasn1-modules==0.2.8
+    - pyinstaller==4.8
+    - pyinstaller-hooks-contrib==2021.5
+    - pyparsing==3.0.6
+    - pyqt5==5.15.6
+    - pyqt5-plugins==5.15.4.2.2
+    - pyqt5-qt5==5.15.2
+    - pyqt5-sip==12.9.0
+    - python-dateutil==2.8.2
+    - python-dotenv==0.19.2
+    - pytz==2021.3
+    - pywin32-ctypes==0.2.0
+    - pyyaml==6.0
+    - qt5-applications==5.15.2.2.2
+    - qt5-tools==5.15.2.1.2
+    - regex==2021.11.10
+    - requests==2.27.0
+    - requests-oauthlib==1.3.0
+    - rsa==4.8
+    - sacremoses==0.0.47
+    - scikit-learn==1.0.2
+    - scipy==1.7.3
+    - sklearn==0.0
     - tensorboard==2.2.0
     - tensorboard-plugin-wit==1.6.0.post2
-prefix: ~/miniconda3/envs/RN3
+    - threadpoolctl==3.0.0
+    - tokenizers==0.10.3
+    - torch-tb-profiler==0.3.1
+    - tqdm==4.62.3
+    - transformers==4.15.0
+    - typing-extensions==4.0.1
+    - urllib3==1.26.7
+    - werkzeug==2.0.2
+    - zipp==3.7.0
+prefix: D:\Coding\Anaconda3\envs\RN3
