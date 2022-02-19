@@ -86,7 +86,7 @@ Relational networks shows far better results in relational questions and non-rel
 
 ## Application Demo
 
-<img src="./readme_img/relational-network-application.gif" width="256">
+<img src="./readme_img/relational-network-application.gif" width="1600">
 
 
 ## Contributions
