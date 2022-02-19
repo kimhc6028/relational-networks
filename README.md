@@ -85,6 +85,7 @@ CNN + MLP occured overfitting to the training data.
 Relational networks shows far better results in relational questions and non-relation questions. 
 
 ## Application Demo
+You can randomly generate and move 2D shaped objects and edit text to ask questions.
 
 <img src="./readme_img/relational-network-application.gif" width="1600">
 
