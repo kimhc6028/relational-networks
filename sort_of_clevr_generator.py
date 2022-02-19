@@ -2,20 +2,20 @@ import cv2
 import os
 import numpy as np
 import random
-#import cPickle as pickle
+
 import pickle
 import warnings
 import argparse
+from translator import translate
 
 parser = argparse.ArgumentParser(description='Sort-of-CLEVR dataset generator')
-parser.add_argument('--seed', type=int, default=1, metavar='S',
-                    help='random seed (default: 1)')
-parser.add_argument('--t-subtype', type=int, default=-1,
-                    help='Force ternary questions to be of a given type')
+parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed (default: 1)')
+parser.add_argument('--t-subtype', type=int, default=-1, help='Force ternary questions to be of a given type')
 args = parser.parse_args()
 
 random.seed(args.seed)
 np.random.seed(args.seed)
+
 
 train_size = 9800
 test_size = 200
@@ -24,7 +24,18 @@ size = 5
 question_size = 18  ## 2 x (6 for one-hot vector of color), 3 for question type, 3 for question subtype
 q_type_idx = 12
 sub_q_type_idx = 15
-"""Answer : [yes, no, rectangle, circle, r, g, b, o, k, y]"""
+
+''' 
+Question [
+    obj 1 color: 'red':0, 'green':1, 'blue':2, 'orange':3, 'gray':4, 'yellow':5, 
+    obj 2 color: 'red':6, 'green':7, 'blue':8, 'orange':9, 'gray':10, 'yellow':11,
+                'no_rel':12,                             | 'rel':13,                                 |'ternary':14,
+    'sub-type[0]:15   query shape->rectangle/circle      | closest-to->rectangle/circle              | between->1~4',
+    'sub-type[1]:16   query horizontal position->yes/no  | furthest-from->rectangle/circle           | is-on-band->yes/no',
+    'sub-type[2]:17   query vertical position->yes/no    | count->1~6                                | count-obtuse-triangles->1~6'
+    ] 
+Answer : [yes, no, rectangle, circle, r, g, b, o, k, y]
+'''
 
 nb_questions = 10
 dirs = './data'
@@ -109,6 +120,7 @@ def build_dataset():
                 answer = 0
             else:
                 answer = 1
+                
         norel_answers.append(answer)
     
     """Binary Relational questions"""
@@ -125,7 +137,7 @@ def build_dataset():
             """closest-to->rectangle/circle"""
             my_obj = objects[color][1]
             dist_list = [((my_obj - obj[1]) ** 2).sum() for obj in objects]
-            dist_list[dist_list.index(0)] = 999
+            dist_list[dist_list.index(0)] = 99999 #999
             closest = dist_list.index(min(dist_list))
             if objects[closest][2] == 'r':
                 answer = 2
@@ -258,6 +270,11 @@ def build_dataset():
     norelations = (norel_questions, norel_answers)
     
     img = img/255.
+
+    # save all image
+    # img_count = num_total
+    # cv2.imwrite(os.path.join(dirs+'/all dataset','{}.png'.format(img_count)), cv2.resize(img*255, (img_size,img_size)))
+
     dataset = (img, ternary_relations, binary_relations, norelations)
     return dataset
 
@@ -270,7 +287,7 @@ train_datasets = [build_dataset() for _ in range(train_size)]
 
 #img_count = 0
 #cv2.imwrite(os.path.join(dirs,'{}.png'.format(img_count)), cv2.resize(train_datasets[0][0]*255, (512,512)))
-
+# translate(train_datasets[0])
 
 print('saving datasets...')
 filename = os.path.join(dirs,'sort-of-clevr.pickle')
