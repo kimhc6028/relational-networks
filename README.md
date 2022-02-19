@@ -92,3 +92,4 @@ Relational networks shows far better results in relational questions and non-rel
 ## Contributions
 
 [@gngdb](https://github.com/gngdb) speeds up the model by 10 times.
+[@neural022](https://github.com/neural022) and [hhhlll21qq](https://github.com/hhhlll21qq) Application build
