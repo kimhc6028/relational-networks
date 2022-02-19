@@ -96,4 +96,4 @@ You can randomly generate and move 2D shaped objects and edit text to ask questi
 
 [@gngdb](https://github.com/gngdb) speeds up the model by 10 times.
 
-[@neural022](https://github.com/neural022) and [hhhlll21qq](https://github.com/hhhlll21qq) Application build
+[@neural022](https://github.com/neural022) and [hhhlll21qq](https://github.com/hhhlll21qq) build application.
