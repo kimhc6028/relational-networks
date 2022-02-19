@@ -84,6 +84,11 @@ CNN + MLP occured overfitting to the training data.
 
 Relational networks shows far better results in relational questions and non-relation questions. 
 
+## Application Demo
+
+<img src="./readme_img/relational-network-application.gif" width="256">
+
+
 ## Contributions
 
 [@gngdb](https://github.com/gngdb) speeds up the model by 10 times.
