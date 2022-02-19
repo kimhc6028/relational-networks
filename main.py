@@ -20,32 +20,24 @@ from model import RN, CNN_MLP
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch Relational-Network sort-of-CLVR Example')
-parser.add_argument('--model', type=str, choices=['RN', 'CNN_MLP'], default='RN', 
-                    help='resume from model stored')
-parser.add_argument('--batch-size', type=int, default=64, metavar='N',
-                    help='input batch size for training (default: 64)')
-parser.add_argument('--epochs', type=int, default=20, metavar='N',
-                    help='number of epochs to train (default: 20)')
-parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
-                    help='learning rate (default: 0.0001)')
-parser.add_argument('--no-cuda', action='store_true', default=False,
-                    help='disables CUDA training')
-parser.add_argument('--seed', type=int, default=1, metavar='S',
-                    help='random seed (default: 1)')
-parser.add_argument('--log-interval', type=int, default=10, metavar='N',
-                    help='how many batches to wait before logging training status')
-parser.add_argument('--resume', type=str,
-                    help='resume from model stored')
-parser.add_argument('--relation-type', type=str, default='binary',
-                    help='what kind of relations to learn. options: binary, ternary (default: binary)')
+parser.add_argument('--model', type=str, choices=['RN', 'CNN_MLP'], default='RN', help='resume from model stored')
+parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
+parser.add_argument('--epochs', type=int, default=20, metavar='N', help='number of epochs to train (default: 20)')
+parser.add_argument('--lr', type=float, default=0.0001, metavar='LR', help='learning rate (default: 0.0001)')
+parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
+parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed (default: 1)')
+parser.add_argument('--log-interval', type=int, default=10, metavar='N', help='how many batches to wait before logging training status')
+parser.add_argument('--resume', type=str, help='resume from model stored')
+parser.add_argument('--relation-type', type=str, default='binary', help='what kind of relations to learn. options: binary, ternary (default: binary)')
 
 args = parser.parse_args()
-args.cuda = not args.no_cuda and torch.cuda.is_available()
+torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+args.cuda = True
 
 torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
-
+''''''
 summary_writer = SummaryWriter()
 
 if args.model=='CNN_MLP': 
@@ -59,6 +51,7 @@ input_img = torch.FloatTensor(bs, 3, 75, 75)
 input_qst = torch.FloatTensor(bs, 18)
 label = torch.LongTensor(bs)
 
+# print("gpu:", args.cuda)
 if args.cuda:
     model.cuda()
     input_img = input_img.cuda()
@@ -70,6 +63,8 @@ input_qst = Variable(input_qst)
 label = Variable(label)
 
 def tensor_data(data, i):
+    
+    # [ batch_size*i : batch_size*i+1 ]
     img = torch.from_numpy(np.asarray(data[0][bs*i:bs*(i+1)]))
     qst = torch.from_numpy(np.asarray(data[1][bs*i:bs*(i+1)]))
     ans = torch.from_numpy(np.asarray(data[2][bs*i:bs*(i+1)]))
@@ -77,7 +72,6 @@ def tensor_data(data, i):
     input_img.data.resize_(img.size()).copy_(img)
     input_qst.data.resize_(qst.size()).copy_(qst)
     label.data.resize_(ans.size()).copy_(ans)
-
 
 def cvt_data_axis(data):
     img = [e[0] for e in data]
@@ -96,6 +90,7 @@ def train(epoch, ternary, rel, norel):
     random.shuffle(ternary)
     random.shuffle(rel)
     random.shuffle(norel)
+
 
     ternary = cvt_data_axis(ternary)
     rel = cvt_data_axis(rel)
@@ -224,6 +219,7 @@ def load_data():
     filename = os.path.join(dirs,'sort-of-clevr.pickle')
     with open(filename, 'rb') as f:
       train_datasets, test_datasets = pickle.load(f)
+
     ternary_train = []
     ternary_test = []
     rel_train = []
@@ -255,6 +251,7 @@ def load_data():
 
 ternary_train, ternary_test, rel_train, rel_test, norel_train, norel_test = load_data()
 
+
 try:
     os.makedirs(model_dirs)
 except:
@@ -276,11 +273,7 @@ with open(f'./{args.model}_{args.seed}_log.csv', 'w') as log_file:
     print(f"Training {args.model} {f'({args.relation_type})' if args.model == 'RN' else ''} model...")
 
     for epoch in range(1, args.epochs + 1):
-        train_acc_ternary, train_acc_binary, train_acc_unary = train(
-            epoch, ternary_train, rel_train, norel_train)
-        test_acc_ternary, test_acc_binary, test_acc_unary = test(
-            epoch, ternary_test, rel_test, norel_test)
-
-        csv_writer.writerow([epoch, train_acc_ternary, train_acc_binary,
-                         train_acc_unary, test_acc_ternary, test_acc_binary, test_acc_unary])
+        train_acc_ternary, train_acc_binary, train_acc_unary = train(epoch, ternary_train, rel_train, norel_train)
+        test_acc_ternary, test_acc_binary, test_acc_unary = test(epoch, ternary_test, rel_test, norel_test)
+        csv_writer.writerow([epoch, train_acc_ternary, train_acc_binary, train_acc_unary, test_acc_ternary, test_acc_binary, test_acc_unary])
         model.save_model(epoch)

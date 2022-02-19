@@ -49,7 +49,8 @@ class FCOutputModel(nn.Module):
         x = F.relu(x)
         x = F.dropout(x)
         x = self.fc3(x)
-        return F.log_softmax(x, dim=1)
+        
+        return x
 
 class BasicModel(nn.Module):
     def __init__(self, args, name):
@@ -59,9 +60,10 @@ class BasicModel(nn.Module):
     def train_(self, input_img, input_qst, label):
         self.optimizer.zero_grad()
         output = self(input_img, input_qst)
-        loss = F.nll_loss(output, label)
+        loss = F.cross_entropy(output, label)
         loss.backward()
         self.optimizer.step()
+        output = F.log_softmax(output, dim=1)
         pred = output.data.max(1)[1]
         correct = pred.eq(label.data).cpu().sum()
         accuracy = correct * 100. / len(label)
@@ -69,7 +71,8 @@ class BasicModel(nn.Module):
         
     def test_(self, input_img, input_qst, label):
         output = self(input_img, input_qst)
-        loss = F.nll_loss(output, label)
+        loss = F.cross_entropy(output, label)
+        output = F.log_softmax(output, dim=1)
         pred = output.data.max(1)[1]
         correct = pred.eq(label.data).cpu().sum()
         accuracy = correct * 100. / len(label)
@@ -100,11 +103,18 @@ class RN(BasicModel):
 
         self.f_fc1 = nn.Linear(256, 256)
 
+        self.fcout = FCOutputModel()
+        
+        self.optimizer = optim.Adam(self.parameters(), lr=args.lr)
+
+
         self.coord_oi = torch.FloatTensor(args.batch_size, 2)
         self.coord_oj = torch.FloatTensor(args.batch_size, 2)
+
         if args.cuda:
             self.coord_oi = self.coord_oi.cuda()
             self.coord_oj = self.coord_oj.cuda()
+
         self.coord_oi = Variable(self.coord_oi)
         self.coord_oj = Variable(self.coord_oj)
 
@@ -113,18 +123,19 @@ class RN(BasicModel):
             return [(i/5-2)/2., (i%5-2)/2.]
         
         self.coord_tensor = torch.FloatTensor(args.batch_size, 25, 2)
+
         if args.cuda:
             self.coord_tensor = self.coord_tensor.cuda()
+
         self.coord_tensor = Variable(self.coord_tensor)
+
         np_coord_tensor = np.zeros((args.batch_size, 25, 2))
+        
         for i in range(25):
-            np_coord_tensor[:,i,:] = np.array( cvt_coord(i) )
+            np_coord_tensor[:, i, :] = np.array(cvt_coord(i))
+
         self.coord_tensor.data.copy_(torch.from_numpy(np_coord_tensor))
 
-
-        self.fcout = FCOutputModel()
-        
-        self.optimizer = optim.Adam(self.parameters(), lr=args.lr)
 
 
     def forward(self, img, qst):
@@ -134,13 +145,15 @@ class RN(BasicModel):
         mb = x.size()[0]
         n_channels = x.size()[1]
         d = x.size()[2]
-        # x_flat = (64 x 25 x 24)
-        x_flat = x.view(mb,n_channels,d*d).permute(0,2,1)
-        
-        # add coordinates
-        x_flat = torch.cat([x_flat, self.coord_tensor],2)
-        
 
+        # view -> (64 x 24 x 25)
+        # permute -> (64 x 25 x 24)
+        # x_flat = (64 x 25 x 24)
+        x_flat = x.view(mb, n_channels, d*d).permute(0,2,1)
+        # add coordinates
+        x_flat = torch.cat([x_flat, self.coord_tensor], 2)
+        
+        
         if self.relation_type == 'ternary':
             # add question everywhere
             qst = torch.unsqueeze(qst, 1) # (64x1x18)
@@ -169,9 +182,9 @@ class RN(BasicModel):
             x_ = x_full.view(mb * (d * d) * (d * d) * (d * d), 96)  # (64*25*25*25x3*26+18) = (1.000.000, 96)
         else:
             # add question everywhere
-            qst = torch.unsqueeze(qst, 1)
-            qst = qst.repeat(1, 25, 1)
-            qst = torch.unsqueeze(qst, 2)
+            qst = torch.unsqueeze(qst, 1)   # (64x1x18)
+            qst = qst.repeat(1, 25, 1)      # (64x25x18)
+            qst = torch.unsqueeze(qst, 2)   # (64x25x1x18)
 
             # cast all pairs against each other
             x_i = torch.unsqueeze(x_flat, 1)  # (64x1x25x26+18)
@@ -184,7 +197,7 @@ class RN(BasicModel):
             x_full = torch.cat([x_i,x_j],3) # (64x25x25x2*26+18)
         
             # reshape for passing through network
-            x_ = x_full.view(mb * (d * d) * (d * d), 70)  # (64*25*25x2*26*18) = (40.000, 70)
+            x_ = x_full.view(mb * (d * d) * (d * d), 70)  # (64*25*25x2*26+18) = (40.000, 70)
             
         x_ = self.g_fc1(x_)
         x_ = F.relu(x_)
@@ -200,6 +213,7 @@ class RN(BasicModel):
             x_g = x_.view(mb, (d * d) * (d * d) * (d * d), 256)
         else:
             x_g = x_.view(mb, (d * d) * (d * d), 256)
+
 
         x_g = x_g.sum(1).squeeze()
         
@@ -219,7 +233,6 @@ class CNN_MLP(BasicModel):
         self.fcout = FCOutputModel()
 
         self.optimizer = optim.Adam(self.parameters(), lr=args.lr)
-        #print([ a for a in self.parameters() ] )
   
     def forward(self, img, qst):
         x = self.conv(img) ## x = (64 x 24 x 5 x 5)
@@ -233,4 +246,3 @@ class CNN_MLP(BasicModel):
         x_ = F.relu(x_)
         
         return self.fcout(x_)
-
