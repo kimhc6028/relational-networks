@@ -87,8 +87,6 @@ Relational networks shows far better results in relational questions and non-rel
 ## Application Demo
 You can randomly generate and move 2D shaped objects and edit text to ask questions.
 
-## Usage
-
   	$ python application.py
 
 <img src="./readme_img/relational-network-application.gif" width="1600">
