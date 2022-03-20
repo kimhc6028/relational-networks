@@ -84,6 +84,23 @@ CNN + MLP occured overfitting to the training data.
 
 Relational networks shows far better results in relational questions and non-relation questions. 
 
+## Application Demo
+retrain experiments:
+
+![](./readme_img/binary_relational_acc.png)
+![](./readme_img/non_relational_acc.png)
+![](./readme_img/ternary_relational_acc.png)
+
+
+You can randomly generate and move 2D shaped objects and edit text to ask questions.
+
+  	$ python application.py
+
+<img src="./readme_img/relational-network-application.gif" width="1600">
+
+
 ## Contributions
 
 [@gngdb](https://github.com/gngdb) speeds up the model by 10 times.
+
+[@neural022](https://github.com/neural022) and [@hhhlll21qq](https://github.com/hhhlll21qq) build application.
