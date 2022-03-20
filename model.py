@@ -179,7 +179,7 @@ class RN(BasicModel):
             x_full = torch.cat([x_i, x_j, x_k], 4)  # (64x25x25x25x3*26+18)
 
             # reshape for passing through network
-            x_ = x_full.view(mb * (d * d) * (d * d) * (d * d), 96)  # (64*25*25*25x3*26+18) = (1.000.000, 96)
+            x_ = x_full.view(mb * (d * d) * (d * d) * (d * d), 96)  # (64*25*25*25x3*26+18) = (1,000,000, 96)
         else:
             # add question everywhere
             qst = torch.unsqueeze(qst, 1)   # (64x1x18)
@@ -197,7 +197,7 @@ class RN(BasicModel):
             x_full = torch.cat([x_i,x_j],3) # (64x25x25x2*26+18)
         
             # reshape for passing through network
-            x_ = x_full.view(mb * (d * d) * (d * d), 70)  # (64*25*25x2*26+18) = (40.000, 70)
+            x_ = x_full.view(mb * (d * d) * (d * d), 70)  # (64*25*25x2*26+18) = (40,000, 70)
             
         x_ = self.g_fc1(x_)
         x_ = F.relu(x_)
