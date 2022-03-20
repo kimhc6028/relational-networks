@@ -88,9 +88,10 @@ Relational networks shows far better results in relational questions and non-rel
 retrain experiments
 experiments
 
-![](./readme_img/binary_relational_acc.png)
-![](./readme_img/non_relational_acc.png)
-![](./readme_img/ternary_relational_acc.png)
+<img src="./readme_img/binary_relational_acc.png" style="background-color:white;" />
+<img src="./readme_img/non_relational_acc.png" style="background-color:white;" />
+<img src="./readme_img/ternary_relational_acc.png" style="background-color:white;" />
+
 
 You can randomly generate and move 2D shaped objects and edit text to ask questions.
 
