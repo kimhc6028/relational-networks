@@ -86,7 +86,7 @@ Relational networks shows far better results in relational questions and non-rel
 
 ## Application Demo
 retrain experiments
-experiments
+experiments:
 
 ![](./readme_img/binary_relational_acc.png)
 ![](./readme_img/non_relational_acc.png)
