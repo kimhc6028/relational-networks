@@ -5,26 +5,25 @@ Code is based on pytorch/examples/mnist (https://github.com/pytorch/examples/tre
 from __future__ import print_function
 import argparse
 import os
-#import cPickle as pickle
 import pickle
 import random
 import numpy as np
 import csv
 
 import torch
-from torch.utils.tensorboard import SummaryWriter
 from torch.autograd import Variable
 
 from model import RN, CNN_MLP
 
 
 # Training settings
+# These are parameters that can be passed in the command line to change training parameters
 parser = argparse.ArgumentParser(description='PyTorch Relational-Network sort-of-CLVR Example')
 parser.add_argument('--model', type=str, choices=['RN', 'CNN_MLP'], default='RN', 
                     help='resume from model stored')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 64)')
-parser.add_argument('--epochs', type=int, default=20, metavar='N',
+parser.add_argument('--epochs', type=int, default=25, metavar='N',
                     help='number of epochs to train (default: 20)')
 parser.add_argument('--lr', type=float, default=0.0001, metavar='LR',
                     help='learning rate (default: 0.0001)')
@@ -40,26 +39,29 @@ parser.add_argument('--relation-type', type=str, default='binary',
                     help='what kind of relations to learn. options: binary, ternary (default: binary)')
 
 args = parser.parse_args()
+print(f"Torch CUDA available?: {torch.cuda.is_available()}")
 args.cuda = not args.no_cuda and torch.cuda.is_available()
 
+# Set the seed for reproducibility
 torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
-
-summary_writer = SummaryWriter()
 
 if args.model=='CNN_MLP': 
   model = CNN_MLP(args)
 else:
   model = RN(args)
-  
+
+# Store dimensions of images and questions
 model_dirs = './model'
 bs = args.batch_size
 input_img = torch.FloatTensor(bs, 3, 75, 75)
 input_qst = torch.FloatTensor(bs, 18)
 label = torch.LongTensor(bs)
 
+# Set the variables on CUDA if using CUDA
 if args.cuda:
+    print(f"Setting up CUDA...")
     model.cuda()
     input_img = input_img.cuda()
     input_qst = input_qst.cuda()
@@ -69,6 +71,7 @@ input_img = Variable(input_img)
 input_qst = Variable(input_qst)
 label = Variable(label)
 
+# Convert data into PyTorch tensors
 def tensor_data(data, i):
     img = torch.from_numpy(np.asarray(data[0][bs*i:bs*(i+1)]))
     qst = torch.from_numpy(np.asarray(data[1][bs*i:bs*(i+1)]))
@@ -78,29 +81,33 @@ def tensor_data(data, i):
     input_qst.data.resize_(qst.size()).copy_(qst)
     label.data.resize_(ans.size()).copy_(ans)
 
-
+# Convert data format
+# Separates the image, question, and answers for each sample into three variables
 def cvt_data_axis(data):
     img = [e[0] for e in data]
     qst = [e[1] for e in data]
     ans = [e[2] for e in data]
     return (img,qst,ans)
 
-    
+# Training pipeline
 def train(epoch, ternary, rel, norel):
+    # Set the model into training mode
     model.train()
 
     if not len(rel[0]) == len(norel[0]):
         print('Not equal length for relation dataset and non-relation dataset.')
         return
-    
+
     random.shuffle(ternary)
     random.shuffle(rel)
     random.shuffle(norel)
 
+    # Convert data from list of tuples to a tuple of lists
     ternary = cvt_data_axis(ternary)
     rel = cvt_data_axis(rel)
     norel = cvt_data_axis(norel)
 
+    # Create lists to store accuracies and losses
     acc_ternary = []
     acc_rels = []
     acc_norels = []
@@ -109,7 +116,12 @@ def train(epoch, ternary, rel, norel):
     l_binary = []
     l_unary = []
 
+    # Each iteration is a batch of size bs (batch size) samples
     for batch_idx in range(len(rel[0]) // bs):
+
+        # Run the train_ function of the model object on the batch for:
+        # ternary, relations, and non-relations data
+
         tensor_data(ternary, batch_idx)
         accuracy_ternary, loss_ternary = model.train_(input_img, input_qst, label)
         acc_ternary.append(accuracy_ternary.item())
@@ -125,6 +137,7 @@ def train(epoch, ternary, rel, norel):
         acc_norels.append(accuracy_norel.item())
         l_unary.append(loss_unary.item())
 
+        # After certain number of batches, log our results in the output log file
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)] '
                   'Ternary accuracy: {:.0f}% | Relations accuracy: {:.0f}% | Non-relations accuracy: {:.0f}%'.format(
@@ -135,29 +148,19 @@ def train(epoch, ternary, rel, norel):
                    accuracy_ternary,
                    accuracy_rel,
                    accuracy_norel))
-        
+
+    # Calculate average accuracies and losses across the batches
     avg_acc_ternary = sum(acc_ternary) / len(acc_ternary)
     avg_acc_binary = sum(acc_rels) / len(acc_rels)
     avg_acc_unary = sum(acc_norels) / len(acc_norels)
-
-    summary_writer.add_scalars('Accuracy/train', {
-        'ternary': avg_acc_ternary,
-        'binary': avg_acc_binary,
-        'unary': avg_acc_unary
-    }, epoch)
 
     avg_loss_ternary = sum(l_ternary) / len(l_ternary)
     avg_loss_binary = sum(l_binary) / len(l_binary)
     avg_loss_unary = sum(l_unary) / len(l_unary)
 
-    summary_writer.add_scalars('Loss/train', {
-        'ternary': avg_loss_ternary,
-        'binary': avg_loss_binary,
-        'unary': avg_loss_unary
-    }, epoch)
-
     # return average accuracy
     return avg_acc_ternary, avg_acc_binary, avg_acc_unary
+
 
 def test(epoch, ternary, rel, norel):
     model.eval()
@@ -199,21 +202,9 @@ def test(epoch, ternary, rel, norel):
     print('\n Test set: Ternary accuracy: {:.0f}% Binary accuracy: {:.0f}% | Unary accuracy: {:.0f}%\n'.format(
         accuracy_ternary, accuracy_rel, accuracy_norel))
 
-    summary_writer.add_scalars('Accuracy/test', {
-        'ternary': accuracy_ternary,
-        'binary': accuracy_rel,
-        'unary': accuracy_norel
-    }, epoch)
-
     loss_ternary = sum(loss_ternary) / len(loss_ternary)
     loss_binary = sum(loss_binary) / len(loss_binary)
     loss_unary = sum(loss_unary) / len(loss_unary)
-
-    summary_writer.add_scalars('Loss/test', {
-        'ternary': loss_ternary,
-        'binary': loss_binary,
-        'unary': loss_unary
-    }, epoch)
 
     return accuracy_ternary, accuracy_rel, accuracy_norel
 

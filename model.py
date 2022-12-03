@@ -5,22 +5,30 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 
+# CNN_OUTPUT_SIZE = 25
+CNN_OUTPUT_SIZE = 49
+
 
 class ConvInputModel(nn.Module):
+    # This class creates the CNN
     def __init__(self):
         super(ConvInputModel, self).__init__()
-        
-        self.conv1 = nn.Conv2d(3, 24, 3, stride=2, padding=1)
+
+        # Define the four convolutional layers
+        # Define batch normalization after each conv layer
+        # We modified two of the convolutional layers to improve performance
+        self.conv1 = nn.Conv2d(3, 24, 3, stride=1, padding=1)
         self.batchNorm1 = nn.BatchNorm2d(24)
         self.conv2 = nn.Conv2d(24, 24, 3, stride=2, padding=1)
         self.batchNorm2 = nn.BatchNorm2d(24)
-        self.conv3 = nn.Conv2d(24, 24, 3, stride=2, padding=1)
+        self.conv3 = nn.Conv2d(24, 24, 4, stride=3, padding=1)
         self.batchNorm3 = nn.BatchNorm2d(24)
         self.conv4 = nn.Conv2d(24, 24, 3, stride=2, padding=1)
         self.batchNorm4 = nn.BatchNorm2d(24)
-
         
     def forward(self, img):
+        # Forward pass of the convolution
+        # After each convolution, perform a ReLu transformation and batch normalization
         """convolution"""
         x = self.conv1(img)
         x = F.relu(x)
@@ -38,6 +46,8 @@ class ConvInputModel(nn.Module):
 
   
 class FCOutputModel(nn.Module):
+    # This is the final pass to convert the output to a vector over the possible answers
+    # Produce logits and perform softmax (F.log_softmax)
     def __init__(self):
         super(FCOutputModel, self).__init__()
 
@@ -45,24 +55,37 @@ class FCOutputModel(nn.Module):
         self.fc3 = nn.Linear(256, 10)
 
     def forward(self, x):
+        # In the forward pass, in addition to the two fully connected layers,
+        # there is also a dropout between the layers.
+        # Dropouts randomly zero some values as a form of regluarization and prevent overfitting.
+        # Overfitting was not a huge concern for us, so this was only seen in the second last layer.
         x = self.fc2(x)
         x = F.relu(x)
         x = F.dropout(x)
         x = self.fc3(x)
         return F.log_softmax(x, dim=1)
 
+
 class BasicModel(nn.Module):
+    # Wrapper for a model, containing the train and test functions
     def __init__(self, args, name):
         super(BasicModel, self).__init__()
         self.name=name
 
     def train_(self, input_img, input_qst, label):
+        # Clear the optimizer to 0
         self.optimizer.zero_grad()
+        # Forward pass through the model
         output = self(input_img, input_qst)
+        # Negatve log-likelihood loss (since this is a classification problem)
         loss = F.nll_loss(output, label)
+        # Compute backward gradients on the NLL loss
         loss.backward()
+        # Take a step using the step
         self.optimizer.step()
+        # The model prediction is the value with the highest probability
         pred = output.data.max(1)[1]
+        # The model output is compared to the true label data to calculate accuracy
         correct = pred.eq(label.data).cpu().sum()
         accuracy = correct * 100. / len(label)
         return accuracy, loss
@@ -76,27 +99,34 @@ class BasicModel(nn.Module):
         return accuracy, loss
 
     def save_model(self, epoch):
+        # Save model parameters during training for ease of resuming training
         torch.save(self.state_dict(), 'model/epoch_{}_{:02d}.pth'.format(self.name, epoch))
 
 
 class RN(BasicModel):
+    # Class for defining a relation network
     def __init__(self, args):
         super(RN, self).__init__(args, 'RN')
-        
+
+        # Create the convolutional network using the ConvInputModel() class
         self.conv = ConvInputModel()
         
         self.relation_type = args.relation_type
-        
+
+        # Define the fully connected layers of the g and f networks
+        # Here, there are 4 layers of the g network
+        # There is 1 layer of the f network
+
         if self.relation_type == 'ternary':
             ##(number of filters per object+coordinate of object)*3+question vector
             self.g_fc1 = nn.Linear((24+2)*3+18, 256)
         else:
             ##(number of filters per object+coordinate of object)*2+question vector
-            self.g_fc1 = nn.Linear((24+2)*2+18, 256)
+            self.g_fc1 = nn.Linear((24+2)*2+18, 500)
 
-        self.g_fc2 = nn.Linear(256, 256)
-        self.g_fc3 = nn.Linear(256, 256)
-        self.g_fc4 = nn.Linear(256, 256)
+        self.g_fc2 = nn.Linear(500, 500)
+        self.g_fc3 = nn.Linear(500, 500)
+        self.g_fc4 = nn.Linear(500, 256)
 
         self.f_fc1 = nn.Linear(256, 256)
 
@@ -112,16 +142,17 @@ class RN(BasicModel):
         def cvt_coord(i):
             return [(i/5-2)/2., (i%5-2)/2.]
         
-        self.coord_tensor = torch.FloatTensor(args.batch_size, 25, 2)
+        self.coord_tensor = torch.FloatTensor(args.batch_size, CNN_OUTPUT_SIZE, 2)
         if args.cuda:
             self.coord_tensor = self.coord_tensor.cuda()
         self.coord_tensor = Variable(self.coord_tensor)
-        np_coord_tensor = np.zeros((args.batch_size, 25, 2))
+        np_coord_tensor = np.zeros((args.batch_size, CNN_OUTPUT_SIZE, 2))
         for i in range(25):
             np_coord_tensor[:,i,:] = np.array( cvt_coord(i) )
         self.coord_tensor.data.copy_(torch.from_numpy(np_coord_tensor))
 
-
+        # Define the last two layers that takes the conv and MLP output
+        # and runs a softmax over the possible outputs
         self.fcout = FCOutputModel()
         
         self.optimizer = optim.Adam(self.parameters(), lr=args.lr)
@@ -129,6 +160,7 @@ class RN(BasicModel):
 
     def forward(self, img, qst):
         x = self.conv(img) ## x = (64 x 24 x 5 x 5)
+        # print(x.size())
         
         """g"""
         mb = x.size()[0]
@@ -139,7 +171,6 @@ class RN(BasicModel):
         
         # add coordinates
         x_flat = torch.cat([x_flat, self.coord_tensor],2)
-        
 
         if self.relation_type == 'ternary':
             # add question everywhere
@@ -170,22 +201,23 @@ class RN(BasicModel):
         else:
             # add question everywhere
             qst = torch.unsqueeze(qst, 1)
-            qst = qst.repeat(1, 25, 1)
+            qst = qst.repeat(1, CNN_OUTPUT_SIZE, 1)
             qst = torch.unsqueeze(qst, 2)
 
             # cast all pairs against each other
             x_i = torch.unsqueeze(x_flat, 1)  # (64x1x25x26+18)
-            x_i = x_i.repeat(1, 25, 1, 1)  # (64x25x25x26+18)
+            x_i = x_i.repeat(1, CNN_OUTPUT_SIZE, 1, 1)  # (64x25x25x26+18)
             x_j = torch.unsqueeze(x_flat, 2)  # (64x25x1x26+18)
             x_j = torch.cat([x_j, qst], 3)
-            x_j = x_j.repeat(1, 1, 25, 1)  # (64x25x25x26+18)
+            x_j = x_j.repeat(1, 1, CNN_OUTPUT_SIZE, 1)  # (64x25x25x26+18)
             
             # concatenate all together
             x_full = torch.cat([x_i,x_j],3) # (64x25x25x2*26+18)
         
             # reshape for passing through network
             x_ = x_full.view(mb * (d * d) * (d * d), 70)  # (64*25*25x2*26*18) = (40.000, 70)
-            
+
+        # Pass the data through the g network with ReLu transformations in between layers
         x_ = self.g_fc1(x_)
         x_ = F.relu(x_)
         x_ = self.g_fc2(x_)
@@ -204,9 +236,12 @@ class RN(BasicModel):
         x_g = x_g.sum(1).squeeze()
         
         """f"""
+        # Pass the output of the g network into the f network
         x_f = self.f_fc1(x_g)
         x_f = F.relu(x_f)
-        
+
+        # Pass the output of the above into the fcout
+        # which converts the data into the final normalized output
         return self.fcout(x_f)
 
 
