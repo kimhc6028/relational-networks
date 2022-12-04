@@ -7,6 +7,7 @@ from torch.autograd import Variable
 
 # CNN_OUTPUT_SIZE = 25
 CNN_OUTPUT_SIZE = 49
+# CNN_OUTPUT_SIZE = 16
 
 
 class ConvInputModel(nn.Module):
@@ -25,6 +26,8 @@ class ConvInputModel(nn.Module):
         self.batchNorm3 = nn.BatchNorm2d(24)
         self.conv4 = nn.Conv2d(24, 24, 3, stride=2, padding=1)
         self.batchNorm4 = nn.BatchNorm2d(24)
+        # self.conv5 = nn.Conv2d(24, 24, 3, stride=2, padding=1)
+        # self.batchNorm5 = nn.BatchNorm2d(24)
         
     def forward(self, img):
         # Forward pass of the convolution
@@ -42,6 +45,9 @@ class ConvInputModel(nn.Module):
         x = self.conv4(x)
         x = F.relu(x)
         x = self.batchNorm4(x)
+        # x = self.conv5(x)
+        # x = F.relu(x)
+        # x = self.batchNorm5(x)
         return x
 
   
@@ -122,11 +128,11 @@ class RN(BasicModel):
             self.g_fc1 = nn.Linear((24+2)*3+18, 256)
         else:
             ##(number of filters per object+coordinate of object)*2+question vector
-            self.g_fc1 = nn.Linear((24+2)*2+18, 500)
+            self.g_fc1 = nn.Linear((24+2)*2+18, 256)
 
-        self.g_fc2 = nn.Linear(500, 500)
-        self.g_fc3 = nn.Linear(500, 500)
-        self.g_fc4 = nn.Linear(500, 256)
+        self.g_fc2 = nn.Linear(256, 500)
+        self.g_fc3 = nn.Linear(500, 256)
+        self.g_fc4 = nn.Linear(256, 256)
 
         self.f_fc1 = nn.Linear(256, 256)
 
@@ -147,7 +153,7 @@ class RN(BasicModel):
             self.coord_tensor = self.coord_tensor.cuda()
         self.coord_tensor = Variable(self.coord_tensor)
         np_coord_tensor = np.zeros((args.batch_size, CNN_OUTPUT_SIZE, 2))
-        for i in range(25):
+        for i in range(CNN_OUTPUT_SIZE):
             np_coord_tensor[:,i,:] = np.array( cvt_coord(i) )
         self.coord_tensor.data.copy_(torch.from_numpy(np_coord_tensor))
 
