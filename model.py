@@ -9,8 +9,8 @@ from copy import deepcopy
 # RN_INPUT_SIZE = 49    # CNN
 # NUM_OBJECTS = 24        # CNN
 
-RN_INPUT_SIZE = 10    # State desc task
-NUM_OBJECTS = 6         # State desc task
+RN_INPUT_SIZE = 6    # State desc task
+NUM_OBJECTS = 10         # State desc task
 
 
 class ConvInputModel(nn.Module):
@@ -135,11 +135,11 @@ class RN(BasicModel):
             self.g_fc1 = nn.Linear((NUM_OBJECTS+2)*3+18, 256)
         else:
             ##(number of filters per object+coordinate of object)*2+question vector
-            self.g_fc1 = nn.Linear((NUM_OBJECTS+2)*2+18, 256)
+            self.g_fc1 = nn.Linear((NUM_OBJECTS+2)*2+18, 2000)
 
-        self.g_fc2 = nn.Linear(256, 256)
-        self.g_fc3 = nn.Linear(256, 256)
-        self.g_fc4 = nn.Linear(256, 256)
+        self.g_fc2 = nn.Linear(2000, 1000)
+        self.g_fc3 = nn.Linear(1000, 500)
+        self.g_fc4 = nn.Linear(500, 256)
 
         self.f_fc1 = nn.Linear(256, 256)
 
@@ -194,7 +194,8 @@ class RN(BasicModel):
             d = x.size()[2]
             # x_flat = (64 x 10 x 6)
             # 64 objects, each with dimension 10
-            x_flat = x.permute(0,2,1)
+            # x_flat = x.permute(0,2,1)
+            x_flat = x
 
         # add coordinates
         x_flat = torch.cat([x_flat, self.coord_tensor], 2)
@@ -218,7 +219,7 @@ class RN(BasicModel):
         if self.input_type == "pixels":
             x_ = x_full.view(mb * (d * d) * (d * d), (NUM_OBJECTS+2)*2+18)  # (64*25*25x2*26*18) = (40.000, 70)
         else:
-            x_ = x_full.view(mb * 10 * 10, (NUM_OBJECTS+2)*2+18)
+            x_ = x_full.view(mb * RN_INPUT_SIZE * RN_INPUT_SIZE, (NUM_OBJECTS+2)*2+18)
 
         # Pass the data through the g network with ReLu transformations in between layers
         x_ = self.g_fc1(x_)
@@ -229,12 +230,12 @@ class RN(BasicModel):
         x_ = F.relu(x_)
         x_ = self.g_fc4(x_)
         x_ = F.relu(x_)
-        
+
         # reshape again and sum
         if self.input_type == "pixels":
             x_g = x_.view(mb, (d * d) * (d * d), 256)
         else:
-            x_g = x_.view(mb, 10 * 10, 256)
+            x_g = x_.view(mb, RN_INPUT_SIZE * RN_INPUT_SIZE, 256)
 
         x_g = x_g.sum(1).squeeze()
         
