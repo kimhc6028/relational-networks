@@ -6,11 +6,11 @@ import torch.optim as optim
 from torch.autograd import Variable
 from copy import deepcopy
 
-# RN_INPUT_SIZE = 49    # CNN
-# NUM_OBJECTS = 24        # CNN
+# NUM_OBJECTS = 49     # CNN
+# DIM_SIZE = 24        # CNN
 
-RN_INPUT_SIZE = 6    # State desc task
-NUM_OBJECTS = 10         # State desc task
+NUM_OBJECTS = 6     # State desc task
+DIM_SIZE = 10       # State desc task
 
 
 class ConvInputModel(nn.Module):
@@ -132,10 +132,10 @@ class RN(BasicModel):
 
         if self.relation_type == 'ternary':
             ##(number of filters per object+coordinate of object)*3+question vector
-            self.g_fc1 = nn.Linear((NUM_OBJECTS+2)*3+18, 256)
+            self.g_fc1 = nn.Linear((DIM_SIZE+2)*3+18, 256)
         else:
             ##(number of filters per object+coordinate of object)*2+question vector
-            self.g_fc1 = nn.Linear((NUM_OBJECTS+2)*2+18, 2000)
+            self.g_fc1 = nn.Linear((DIM_SIZE+2)*2+18, 2000)
 
         self.g_fc2 = nn.Linear(2000, 1000)
         self.g_fc3 = nn.Linear(1000, 500)
@@ -155,12 +155,12 @@ class RN(BasicModel):
         def cvt_coord(i):
             return [(i/5-2)/2., (i%5-2)/2.]
         
-        self.coord_tensor = torch.FloatTensor(args.batch_size, RN_INPUT_SIZE, 2)
+        self.coord_tensor = torch.FloatTensor(args.batch_size, NUM_OBJECTS, 2)
         if args.cuda:
             self.coord_tensor = self.coord_tensor.cuda()
         self.coord_tensor = Variable(self.coord_tensor)
-        np_coord_tensor = np.zeros((args.batch_size, RN_INPUT_SIZE, 2))
-        for i in range(RN_INPUT_SIZE):
+        np_coord_tensor = np.zeros((args.batch_size, NUM_OBJECTS, 2))
+        for i in range(NUM_OBJECTS):
             np_coord_tensor[:,i,:] = np.array( cvt_coord(i) )
         self.coord_tensor.data.copy_(torch.from_numpy(np_coord_tensor))
 
@@ -202,24 +202,24 @@ class RN(BasicModel):
 
         # add question everywhere
         qst = torch.unsqueeze(qst, 1)
-        qst = qst.repeat(1, RN_INPUT_SIZE, 1)
+        qst = qst.repeat(1, NUM_OBJECTS, 1)
         qst = torch.unsqueeze(qst, 2)
 
         # cast all pairs against each other
         x_i = torch.unsqueeze(x_flat, 1)  # (64x1x25x26+18)
-        x_i = x_i.repeat(1, RN_INPUT_SIZE, 1, 1)  # (64x25x25x26+18)
+        x_i = x_i.repeat(1, NUM_OBJECTS, 1, 1)  # (64x25x25x26+18)
         x_j = torch.unsqueeze(x_flat, 2)  # (64x25x1x26+18)
         x_j = torch.cat([x_j, qst], 3)
-        x_j = x_j.repeat(1, 1, RN_INPUT_SIZE, 1)  # (64x25x25x26+18)
+        x_j = x_j.repeat(1, 1, NUM_OBJECTS, 1)  # (64x25x25x26+18)
 
         # concatenate all together
         x_full = torch.cat([x_i,x_j],3) # (64x6x6x2*26+18)
 
         # reshape for passing through network
         if self.input_type == "pixels":
-            x_ = x_full.view(mb * (d * d) * (d * d), (NUM_OBJECTS+2)*2+18)  # (64*25*25x2*26*18) = (40.000, 70)
+            x_ = x_full.view(mb * (d * d) * (d * d), (DIM_SIZE+2)*2+18)  # (64*25*25x2*26*18) = (40.000, 70)
         else:
-            x_ = x_full.view(mb * RN_INPUT_SIZE * RN_INPUT_SIZE, (NUM_OBJECTS+2)*2+18)
+            x_ = x_full.view(mb * NUM_OBJECTS * NUM_OBJECTS, (DIM_SIZE+2)*2+18)
 
         # Pass the data through the g network with ReLu transformations in between layers
         x_ = self.g_fc1(x_)
@@ -235,7 +235,7 @@ class RN(BasicModel):
         if self.input_type == "pixels":
             x_g = x_.view(mb, (d * d) * (d * d), 256)
         else:
-            x_g = x_.view(mb, RN_INPUT_SIZE * RN_INPUT_SIZE, 256)
+            x_g = x_.view(mb, NUM_OBJECTS * NUM_OBJECTS, 256)
 
         x_g = x_g.sum(1).squeeze()
         
