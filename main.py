@@ -19,7 +19,7 @@ from model import RN, CNN_MLP
 # Training settings
 # These are parameters that can be passed in the command line to change training parameters
 parser = argparse.ArgumentParser(description='PyTorch Relational-Network sort-of-CLVR Example')
-parser.add_argument('--model', type=str, choices=['RN', 'CNN_MLP'], default='RN', 
+parser.add_argument('--model', type=str, choices=['RN', 'CNN_MLP'], default='RN',
                     help='resume from model stored')
 parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                     help='input batch size for training (default: 64)')
@@ -37,7 +37,8 @@ parser.add_argument('--resume', type=str,
                     help='resume from model stored')
 parser.add_argument('--relation-type', type=str, default='binary',
                     help='what kind of relations to learn. options: binary, ternary (default: binary)')
-
+parser.add_argument('--input-type', type=str, default='pixels',
+                    help='Data format of the input. Options: [pixels, descriptors] (default: pixels)')
 args = parser.parse_args()
 print(f"Torch CUDA available?: {torch.cuda.is_available()}")
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -55,7 +56,10 @@ else:
 # Store dimensions of images and questions
 model_dirs = './model'
 bs = args.batch_size
-input_img = torch.FloatTensor(bs, 3, 75, 75)
+if args.input_type == "pixels":
+    input_img = torch.FloatTensor(bs, 3, 75, 75)
+else:
+    input_img = torch.FloatTensor(bs, 6, 10)
 input_qst = torch.FloatTensor(bs, 18)
 label = torch.LongTensor(bs)
 
@@ -212,7 +216,10 @@ def test(epoch, ternary, rel, norel):
 def load_data():
     print('loading data...')
     dirs = './data'
-    filename = os.path.join(dirs,'sort-of-clevr.pickle')
+    if args.input_type == "pixels":
+        filename = os.path.join(dirs,'sort-of-clevr.pickle')
+    else:
+        filename = os.path.join(dirs,'sort-of-clevr-descriptors.pickle')
     with open(filename, 'rb') as f:
       train_datasets, test_datasets = pickle.load(f)
     ternary_train = []
@@ -224,7 +231,8 @@ def load_data():
     print('processing data...')
 
     for img, ternary, relations, norelations in train_datasets:
-        img = np.swapaxes(img, 0, 2)
+        if args.input_type == "pixels":
+            img = np.swapaxes(img, 0, 2)
         for qst, ans in zip(ternary[0], ternary[1]):
             ternary_train.append((img,qst,ans))
         for qst,ans in zip(relations[0], relations[1]):
@@ -233,7 +241,8 @@ def load_data():
             norel_train.append((img,qst,ans))
 
     for img, ternary, relations, norelations in test_datasets:
-        img = np.swapaxes(img, 0, 2)
+        if args.input_type == "pixels":
+            img = np.swapaxes(img, 0, 2)
         for qst, ans in zip(ternary[0], ternary[1]):
             ternary_test.append((img, qst, ans))
         for qst,ans in zip(relations[0], relations[1]):
@@ -259,7 +268,7 @@ if args.resume:
         model.load_state_dict(checkpoint)
         print('==> loaded checkpoint {}'.format(filename))
 
-with open(f'./{args.model}_{args.seed}_log.csv', 'w') as log_file:
+with open(f'./{args.model}_{args.input_type}_{args.seed}_log.csv', 'w') as log_file:
     csv_writer = csv.writer(log_file, delimiter=',')
     csv_writer.writerow(['epoch', 'train_acc_ternary', 'train_acc_rel',
                      'train_acc_norel', 'train_acc_ternary', 'test_acc_rel', 'test_acc_norel'])

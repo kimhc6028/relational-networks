@@ -2,17 +2,22 @@ import cv2
 import os
 import numpy as np
 import random
-#import cPickle as pickle
 import pickle
 import warnings
 import argparse
+import pandas as pd
 
 parser = argparse.ArgumentParser(description='Sort-of-CLEVR dataset generator')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--t-subtype', type=int, default=-1,
                     help='Force ternary questions to be of a given type')
+parser.add_argument('--output_type', type=str, default="pixels",
+                    help='Data type to generate. Options: [pixels, descriptors] (default: pixels)')
 args = parser.parse_args()
+
+if args.output_type not in ["pixels", "descriptors"]:
+    raise Exception("Please ensure output type is one of [pixels, descriptors]")
 
 random.seed(args.seed)
 np.random.seed(args.seed)
@@ -44,6 +49,7 @@ try:
 except:
     print('directory {} already exists'.format(dirs))
 
+
 def center_generate(objects):
     while True:
         pas = True
@@ -54,8 +60,6 @@ def center_generate(objects):
                     pas = False
         if pas:
             return center
-
-
 
 def build_dataset():
     objects = []
@@ -71,7 +75,6 @@ def build_dataset():
             center_ = (center[0], center[1])
             cv2.circle(img, center_, size, color, -1)
             objects.append((color_id,center,'c'))
-
 
     ternary_questions = []
     binary_questions = []
@@ -258,7 +261,23 @@ def build_dataset():
     norelations = (norel_questions, norel_answers)
     
     img = img/255.
-    dataset = (img, ternary_relations, binary_relations, norelations)
+    if args.output_type == "pixels":
+        dataset = (img, ternary_relations, binary_relations, norelations)
+    else:
+        # Encode the state description
+        num_colors = len(colors)
+        description = np.zeros((num_colors, num_colors+2+2))
+        for obj in objects:
+            row_id = obj[0]     # row id is the same as the color id
+            description[row_id, obj[0]] = 1     # one-hot encoding of the color
+            description[row_id, num_colors] = obj[1][0]/img_size    # normalized x-coordinate of shape center
+            description[row_id, num_colors+1] = obj[1][1]/img_size  # normalized y-coordinate of shape center
+            if obj[2] == "r":   # one-hot encoding of the shape
+                description[row_id, num_colors+2] = 1
+            else:
+                description[row_id, num_colors+3] = 1
+        dataset = (np.array(description), ternary_relations, binary_relations, norelations)
+
     return dataset
 
 
@@ -267,13 +286,22 @@ test_datasets = [build_dataset() for _ in range(test_size)]
 print('building train datasets...')
 train_datasets = [build_dataset() for _ in range(train_size)]
 
-
-#img_count = 0
-#cv2.imwrite(os.path.join(dirs,'{}.png'.format(img_count)), cv2.resize(train_datasets[0][0]*255, (512,512)))
+# Display a sample of the state description for submission
+print("Displaying a sample state description for an image...")
+if args.output_type == "descriptors":
+    sample = train_datasets[0][0]
+    pd.set_option('display.max_columns', 10)
+    # print(pd.DataFrame(sample, columns=["color_id", "center_x", "center_y", "shape"]))
+    print(pd.DataFrame(sample, columns=["color_0", "color_1", "color_2", "color_3", "color_4", "color_5",
+                                        "center_x_norm", "center_y_norm", "shape_r", "shape_c"]))
 
 
 print('saving datasets...')
-filename = os.path.join(dirs,'sort-of-clevr.pickle')
+if args.output_type == "pixels":
+    filename = os.path.join(dirs,'sort-of-clevr.pickle')
+else:
+    filename = os.path.join(dirs,'sort-of-clevr-descriptors.pickle')
+
 with  open(filename, 'wb') as f:
     pickle.dump((train_datasets, test_datasets), f)
 print('datasets saved at {}'.format(filename))
